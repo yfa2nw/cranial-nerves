@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cranial Nerves</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- shared gradients / patterns / filters, referenced by every svg on the page -->
+  <svg id="defs" width="0" height="0" aria-hidden="true" style="position:absolute"></svg>
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-row"><h1>Cranial <em>Nerves</em></h1><button class="help-btn" id="helpInfo" aria-label="How to use this page" title="How to use this page">?</button></div>
+      <p>mapped pathways, anatomy, function, and lesions</p>
+    </div>
+    <nav id="picker" class="picker" aria-label="Choose a nerve"></nav>
+    <!-- info popups, grouped by what they are for -->
+    <nav class="info-nav" aria-label="Background reading">
+      <div class="in-grp"><span class="in-l">Foundations</span>
+        <button class="in-b" id="fibreInfo"><i>⌬</i>Fibre types</button>
+        <button class="in-b" id="passInfo"><i>⊙</i>Foramina &amp; ganglia</button>
+      </div>
+      <div class="in-grp"><span class="in-l">How the senses work</span>
+        <button class="in-b" id="olfInfo" style="--c:var(--sva)"><i>◇</i>Smell</button>
+        <button class="in-b" id="sightInfo" style="--c:#9ad0ff"><i>◉</i>Sight</button>
+        <button class="in-b" id="hearInfo" style="--c:var(--coch)"><i>∿</i>Hearing</button>
+        <button class="in-b" id="tasteInfo" style="--c:#ff8fa3"><i>❦</i>Taste</button>
+      </div>
+      <button class="in-search" id="abbrInfo"><i>⌕</i><span>Look up an abbreviation</span><kbd>/</kbd></button>
+    </nav>
+  </header>
+  <!-- compact switcher: slides in once the picker above scrolls out of view -->
+  <div id="miniBar" class="mini-bar" aria-label="Quick nerve switcher"></div>
+  <div class="legend-row">
+    <span class="lg-title">Fibre types</span>
+    <div class="lg-body">
+      <div id="fiber-legend" class="legend"></div>
+      <div id="lg-key" class="lg-key"></div>
+    </div>
+  </div>
+
+  <section id="route" class="route" aria-label="Pathway stations"></section>
+
+  <main>
+    <section class="stage-wrap glass">
+      <div class="stage-tools" id="tools"></div>
+      <div class="stage-scroll"><div id="stage"></div></div>
+      <div id="shape-key" class="shape-key"></div>
+    </section>
+
+    <section class="cards">
+      <article class="card glass" style="--i:0">
+        <header><span class="card-k">i</span><h3 id="xs-title">Nucleus</h3><span class="card-sub" id="xs-sub"></span></header>
+        <div class="card-body" id="card-xs"></div>
+      </article>
+      <article class="card glass" style="--i:1">
+        <header><span class="card-k">ii</span><h3 id="cs-title">Cavernous sinus</h3><span class="card-sub" id="cs-sub">coronal · right side lit</span></header>
+        <div class="card-body" id="card-cs"></div>
+      </article>
+      <article class="card glass" style="--i:2">
+        <header><span class="card-k">iii</span><h3 id="sof-title">Superior orbital fissure</h3><span class="card-sub" id="sof-sub">right apex · front view</span></header>
+        <div class="card-body" id="card-sof"></div>
+      </article>
+      <article class="card glass full" style="--i:3">
+        <header><span class="card-k">iv</span><h3 id="mv-title">Movements</h3><span class="card-sub" id="mv-sub">gaze · light · near · pick a lesion</span></header>
+        <div class="card-body" id="card-eyes"></div>
+      </article>
+      <article class="card glass full sig-card" style="--i:4">
+        <header><span class="card-k">v</span><h3 id="sig-title">Signature</h3><span class="card-sub" id="sig-sub"></span></header>
+        <div class="card-body" id="card-sig"></div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="foot">hover anything · dotted = inside the brainstem · beaded = postganglionic · white sparks show conduction direction</footer>
+
+  <div id="tip" class="tip" role="tooltip"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/defs.js"></script>
+  <script src="js/stage.js"></script>
+  <script src="js/panels.js"></script>
+  <script src="js/clinic.js"></script>
+  <script src="js/eyes.js"></script>
+  <script src="js/faces.js"></script>
+  <script src="js/throat.js"></script>
+  <script src="js/smell.js"></script>
+  <script src="js/vision.js"></script>
+  <script src="js/hear.js"></script>
+  <script src="js/fibres.js"></script>
+  <script src="js/info.js"></script>
+  <script src="js/olfaction.js"></script>
+  <script src="js/sight.js"></script>
+  <script src="js/hearing.js"></script>
+  <script src="js/taste.js"></script>
+  <script src="js/passages.js"></script>
+  <script src="js/abbr.js"></script>
+  <script src="js/help.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
