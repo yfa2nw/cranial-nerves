@@ -1110,7 +1110,8 @@ main { padding: 0 40px 40px; }
 .ctxr.c-VIII.tgt path { fill: color-mix(in srgb, var(--vest) 22%, transparent); stroke: color-mix(in srgb, var(--vest) 70%, transparent); }
 
 /* hearing & balance card */
-.findings.f5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* five results don’t fit in one row of the patient column: 3 + 2 */
+.findings.f5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .hfork { opacity: 0; transition: opacity .3s; }
 .hfork.on { opacity: 1; }
 .hfork path { fill: none; stroke: #d8dce6; stroke-width: 3.2; stroke-linecap: round; }
@@ -1170,10 +1171,16 @@ main { padding: 0 40px 40px; }
 }
 .cell b { font-size: 9px; color: var(--mute); }
 .cell em { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell.wide em { white-space: normal; line-height: 1.25; }      /* single-value cells wrap rather than cut a word */
 .cell.ok { background: rgba(95, 224, 160, .13); border-color: rgba(95, 224, 160, .4); color: #8ff3c2; }
 .cell.part { background: rgba(255, 181, 71, .13); border-color: rgba(255, 181, 71, .45); color: #ffd08a; }
 .cell.no { background: rgba(255, 77, 77, .14); border-color: rgba(255, 77, 77, .5); color: #ffa3a3; }
 .fd-note { font-size: 10px; color: var(--faint); min-height: 12px; }
+/* every result is shown; hovering a card (or one side cell) acts that test out on the patient */
+.fd[data-test] { cursor: help; transition: border-color .2s, background .2s; }
+.fd[data-test]:hover { border-color: rgba(242, 199, 110, .55); background: rgba(242, 199, 110, .05); }
+.fd .cell[data-test]:hover { outline: 1.5px solid rgba(242, 199, 110, .8); outline-offset: 1px; }
+.fd-hint { display: flex; align-items: center; gap: 8px; font: italic 500 13px var(--serif); color: var(--faint); margin-top: -2px; }
 .card-body .tmap { width: 44px; height: auto; align-self: center; }
 .cell:not(.wide) { justify-content: center; font-size: 13px; }
 .tz { fill: rgba(230, 140, 150, .16); stroke: rgba(255, 180, 190, .45); stroke-width: 1; transition: fill .3s; }

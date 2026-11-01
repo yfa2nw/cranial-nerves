@@ -59,16 +59,32 @@ const Clinic = {
   sw: (key, attr, on, icon, label, tip) =>
     `<button class="switch ck ${on ? 'on' : ''}" data-${attr}="${key}" data-tip="${tip}"><span class="sw-ic">${icon}</span>${label}<span class="track"><span class="knob"></span></span></button>`,
 
-  // ── findings strip: explicit results for each test
-  // items: [{ k, label, icon, kind: 'lr' | 'tongue' | 'val' }]
+  // ── findings strip: every result is shown; hovering a card (or one side of it) performs that test
+  // items: [{ k, label, icon, kind: 'lr' | 'tongue' | 'field' | 'val', test?, sides?: { R, L }, tip? }]
+  //   test  = test key acted out when the card is hovered · sides = per-side test keys for 'lr' cards
   findings(items) {
+    const dt = (k) => k ? ` data-test="${k}"` : '';
     const body = (it) =>
-      it.kind === 'lr' ? `<div class="lr"><span class="cell" data-side="R"><b>R</b><em>—</em></span><span class="cell" data-side="L"><b>L</b><em>—</em></span></div>`
+      it.kind === 'lr' ? `<div class="lr"><span class="cell" data-side="R"${dt(it.sides?.R)}><b>R</b><em>—</em></span><span class="cell" data-side="L"${dt(it.sides?.L)}><b>L</b><em>—</em></span></div>`
       : it.kind === 'tongue' ? Clinic.tongueMap()
       : it.kind === 'field' ? `<div class="fieldbox untested">${Clinic.fieldSVG('none')}</div>`
       : `<div class="lr"><span class="cell wide"><em>—</em></span></div>`;
-    return `<div class="findings">${items.map(it =>
-      `<div class="fd" id="fd-${it.k}"><div class="fd-h"><i>${it.icon}</i>${it.label}</div>${body(it)}<small class="fd-note"></small></div>`).join('')}</div>`;
+    const cls = items.length === 5 ? 'findings f5' : 'findings';
+    return `<div class="${cls}">${items.map(it =>
+      `<div class="fd" id="fd-${it.k}"${dt(it.test || it.sides?.R)}${it.tip ? ` data-tip="${it.tip}"` : ''}><div class="fd-h"><i>${it.icon}</i>${it.label}</div>${body(it)}<small class="fd-note"></small></div>`).join('')}</div>
+      <p class="fd-hint">${Clinic.act('hover')}a result to watch that test on the patient and in the circuit</p>`;
+  },
+
+  // hovering a findings card (or one of its side cells) calls cb(testKey); leaving the strip calls cb(null)
+  probe(root, cb) {
+    const strip = root.querySelector('.findings');
+    if (!strip) return;
+    let cur = null;
+    strip.addEventListener('mouseover', e => {
+      const k = e.target.closest('[data-test]')?.dataset.test || null;
+      if (k !== cur) { cur = k; cb(k); }
+    });
+    strip.addEventListener('mouseleave', () => { if (cur) { cur = null; cb(null); } });
   },
 
   // visual field circle (unit radius), drawn as the patient sees it: left half = left field
@@ -126,6 +142,6 @@ const Clinic = {
     if (n) n.textContent = text;
   },
 
-  explainShell: () =>
-    `<section class="step step-explain"><div class="step-h"><span class="sn">3</span><b>What &amp; why</b></div><div class="explain" id="explain"></div></section>`
+  explainShell: (n = 3) =>
+    `<section class="step step-explain"><div class="step-h"><span class="sn">${n}</span><b>What &amp; why</b></div><div class="explain" id="explain"></div></section>`
 };

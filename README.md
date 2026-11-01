@@ -55,6 +55,10 @@ The selected nerve is kept in the URL hash, so `index.html#VII` opens on the fac
 
 Each card has an examinable patient, a circuit diagram that lights up to the first broken link, a findings strip, and a "what & why" explanation.
 
+- **Findings strip:** shows every test result at once, for a normal patient too. There is nothing to switch on.
+- **Hover a result** (or its R / L cell) to watch that test performed on the patient: vial and finger, torch, tuning fork, swab, head turn and so on. The circuit then narrows to that test's pathway. At rest, the circuit draws every test's pathway.
+- **Movements:** the face and throat cards also have ◌ hover "ask the patient to…" buttons, and the Movements card (III IV VI) keeps its gaze pad and light/near switches.
+
 | Card | Nerves | Lesions |
 |---|---|---|
 | Movements | III · IV · VI | III, IV and VI palsies · INO · one-and-a-half · VI nucleus · Parinaud · Argyll Robertson · Horner · Adie · uncal herniation · myasthenia gravis · cavernous sinus |
@@ -314,11 +318,12 @@ The signatures are static SVG; their interaction lives in `bindSignature(id)` in
 | `explain(box, d, empty, tag)` | write the "what & why" panel from a lesion entry |
 | `suggest(scope, attrs, keys)` | pulse the controls whose `data-<attr>` is in `keys` (from `try.keys`) |
 | `act(k)` · `sw(...)` | the ◌ hover / ● click badge and toggle-switch buttons |
-| `findings(items)` | the findings strip; items are `{ k, label, icon, kind: 'lr' \| 'tongue' \| 'field' \| 'val' }` |
+| `findings(items)` | the findings strip, plus a "hover a result" hint; items are `{ k, label, icon, kind: 'lr' \| 'tongue' \| 'field' \| 'val', test?, sides?: { R, L }, tip? }`. `test` / `sides` put `data-test` on the card / its side cells; five items get the 3 + 2 layout (`.f5`) |
+| `probe(root, cb)` | hovering a findings card or side cell calls `cb(testKey)`; leaving the strip calls `cb(null)` |
 | `setCell(k, side, state, text)` · `setNote` · `setZones` · `setField` · `sides(r, l)` | update the findings strip (`state`: `ok` ✓, `part` ◐, `no` ✗) |
 | `FIELD` · `fieldSVG(def)` | visual-field defect shapes, drawn as the patient sees them |
 | `tongueMap()` | tongue zones for taste findings |
-| `explainShell()` | the step-3 container |
+| `explainShell(n = 3)` | the "What & why" step container, numbered `n` |
 
 ### Card-iv modules: `eyes.js`, `faces.js`, `throat.js`, `smell.js`, `vision.js`, `hear.js`
 
@@ -328,23 +333,23 @@ They all follow the same internal pattern:
 
 | Piece | Example (hear.js) | Role |
 |---|---|---|
-| state | `mode` (current lesion), `tests`, `recorded` | what's selected and what's been tested |
-| tests / controls | `GROUPS`, `TESTS`, `EXPR` | the buttons in step 2; ◌ = hold/hover to perform, ● = click to toggle |
+| state | `mode` (current lesion), `probe` (hovered test), `held` (hovered movement) | what's selected and what's being acted out |
+| tests / controls | findings items with `test` / `sides`; `EXPR` (face, throat) | each test is a findings card to hover; `EXPR` are the ◌ hover movements |
 | circuit | `HC` | named segments drawn with `Clinic.segs` |
 | chains | `CHAINS` | which segments each test sends a signal through |
 | lesion records | `HC_LES` (`LESIONS`, `FC_LES`, `TC_LES`, `SC_LES`, `VC_LES` elsewhere) | per lesion: `blk` (blocked segments) and `marks` (marker positions) |
 | `resolve()` | (eyes, faces, throat) | turns *lesion + current action* into the patient picture: eye position, lid, pupil, mouth, palate, tongue… |
-| `apply()` | | updates the patient drawing and the findings strip |
+| `apply()` | | acts out `probe` / `held` on the patient and writes every result into the findings strip |
 | `paintCircuit()` · `paintLesion()` | | call `Clinic.paint` / `Clinic.marks` |
 
 Card-specific notes:
 
-- **eyes.js:** a living pair of eyes. `gaze` is a unit vector; `MUSCLES` (data.js) gives each muscle's pull, so `resolve(g)` works out where each eye can actually point. Light/near reflex switches, an idle wander when nothing is held.
-- **faces.js:** expressions (`EXPR`) plus tests (corneal, sensation map, taste); separate upper/lower-face chains explain forehead sparing.
-- **throat.js:** "aah", tongue, shrug, gag on each side, carotid massage; `has(...)` groups lesions that share signs (bulbar + pseudobulbar, for example).
+- **eyes.js** (unchanged pattern, still click-driven): a living pair of eyes. `gaze` is a unit vector; `MUSCLES` (data.js) gives each muscle's pull, so `resolve(g)` works out where each eye can actually point. Light/near reflex switches, an idle wander when nothing is held.
+- **faces.js:** hover expressions (`EXPR`) plus five results: corneal blink, sensation map, taste, loud sound, tears. Separate upper/lower-face chains explain forehead sparing.
+- **throat.js:** hover movements ("aah", tongue, shrug, head turns) plus results for gag on each side, taste, carotid massage and voice; `has(...)` groups lesions that share signs (bulbar + pseudobulbar, for example).
 - **smell.js:** one nostril at a time, with coffee and an irritant (ammonia, which tests V not I).
-- **vision.js:** confrontation fields per eye, swinging light; field defects come from the lesion entry (`LE`, `RE`, `rapd`).
-- **hear.js:** Weber, Rinne each side, head impulse each way, look ahead, Hallpike each side. One test per group at a time, and results stay recorded until the lesion changes.
+- **vision.js:** confrontation fields per eye, light in each eye, swinging light; field defects come from the lesion entry (`LE`, `RE`, `rapd`).
+- **hear.js:** Weber, Rinne each side, head impulse each way, look ahead, Hallpike each side. Each side cell plays its own side.
 
 ### `info.js`: shared popup machinery
 
@@ -549,7 +554,7 @@ Edit or add a segment in `STAGE_NERVES` (stage.js), following the direction rule
 ## Limitations
 
 - **Educational and schematic.** Anatomy is simplified and not to scale. Clinical content is for learning, not diagnosis or management. The quiz bank has not been peer-reviewed.
-- **Hover-first.** Much of the detail lives in hover notes and hover-to-perform tests. Touch devices get clicks but miss most hover content.
+- **Hover-first.** Much of the detail lives in hover notes and hover-to-perform tests. On touch devices every clinical result is still visible in the findings strips, but the hover demonstrations and most hover notes are out of reach.
 - **Desktop-first.** The stage needs about 980 px and scrolls sideways below that. The header, Reading room and cards adapt down to phone width, but the diagrams get small.
 - **Partial accessibility.** Diagrams are SVG without full keyboard navigation or screen-reader descriptions.
 - **Global scope.** Every module shares the global namespace and depends on script order. There is no bundler, linter or type checking.

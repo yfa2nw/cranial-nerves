@@ -4,16 +4,10 @@
 // ─────────────────────────────────────────────────────────────
 
 const Hear = (() => {
-  let mode = null;
-  const tests = { weber: false, rinneR: false, rinneL: false, hitR: false, hitL: false, gaze: false, hallR: false, hallL: false };
-  // one test per group at a time; results stay recorded until the lesion changes
-  const GROUPS = {
-    fork: [['weber', 'Weber', '⋔'], ['rinneR', 'Rinne right', '◖'], ['rinneL', 'Rinne left', '◗']],
-    hit:  [['hitR', 'Turn right', '↶'], ['hitL', 'Turn left', '↷']],
-    eyes: [['gaze', 'Look ahead', '◉'], ['hallR', 'Hallpike right', '⤵'], ['hallL', 'Hallpike left', '⤵']]
-  };
+  // probe = the test acted out while its findings card (or one side of it) is hovered; every result is always shown
+  let mode = null, probe = null;
+  const GROUPS = { fork: ['weber', 'rinneR', 'rinneL'], hit: ['hitR', 'hitL'], eyes: ['gaze', 'hallR', 'hallL'] };
   const NORMAL = { weber: 'mid', rinne: { R: 'ok', L: 'ok' }, hit: { R: 'ok', L: 'ok' }, nys: 'none', hall: { R: 'ok', L: 'ok' } };
-  let recorded = {};
 
   // ── VIII circuit (viewBox 0 0 300 320), front view: right side on the left
   const HC = {
@@ -120,17 +114,15 @@ const Hear = (() => {
     const act = Clinic.act;
     const chips = Object.entries(HEAR_LESIONS).map(([k, l]) =>
       `<button class="dchip ck ${mode === k ? 'on' : ''}" data-hl="${k}" data-tip="H-${k}"><i></i>${l.chip}</button>`).join('');
-    const seg = (grp) => `<div class="seg2">${GROUPS[grp].map(([k, l, g]) =>
-      `<button class="seg-b ${tests[k] ? 'on' : ''}" data-test="${k}" data-tip="ht-${k}"><span>${g}</span>${l}</button>`).join('')}</div>`;
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
         <div class="patient">${patientSVG()}${Clinic.findings([
-          { k: 'web', label: 'Weber', icon: '⋔', kind: 'val' },
-          { k: 'rin', label: 'Rinne', icon: '◖', kind: 'lr' },
-          { k: 'hit', label: 'Impulse', icon: '↶', kind: 'lr' },
-          { k: 'nys', label: 'Gaze', icon: '◉', kind: 'val' },
-          { k: 'hal', label: 'Hallpike', icon: '⤵', kind: 'lr' }]).replace('class="findings"', 'class="findings f5"')}</div>
+          { k: 'web', label: 'Weber', icon: '⋔', kind: 'val', test: 'weber', tip: 'ht-weber' },
+          { k: 'rin', label: 'Rinne', icon: '◖', kind: 'lr', sides: { R: 'rinneR', L: 'rinneL' }, tip: 'ht-rinneR' },
+          { k: 'hit', label: 'Impulse', icon: '↶', kind: 'lr', sides: { R: 'hitR', L: 'hitL' }, tip: 'ht-hitR' },
+          { k: 'nys', label: 'Gaze', icon: '◉', kind: 'val', test: 'gaze', tip: 'ht-gaze' },
+          { k: 'hal', label: 'Hallpike', icon: '⤵', kind: 'lr', sides: { R: 'hallR', L: 'hallL' }, tip: 'ht-hallR' }])}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -138,22 +130,14 @@ const Hear = (() => {
           <div class="step-h"><span class="sn">1</span><b>Pick a lesion</b>${act('click')}<small>one at a time · click again to clear</small></div>
           <div class="dchips">${chips}</div>
         </section>
-        <section class="step">
-          <div class="step-h"><span class="sn">2</span><b>Test hearing &amp; balance</b>${act('click')}<small>one per row at a time · results stay recorded</small></div>
-          <div class="sig-ctrl groups">
-            <div class="ctrl-grp"><span class="cg-l">Tuning fork · 512 Hz</span>${seg('fork')}</div>
-            <div class="ctrl-grp"><span class="cg-l">Head impulse</span>${seg('hit')}</div>
-            <div class="ctrl-grp"><span class="cg-l">Eyes</span>${seg('eyes')}</div>
-          </div>
-        </section>
       </div>
-      ${Clinic.explainShell()}
+      ${Clinic.explainShell(2)}
     </div>`;
   }
 
   const $id = (x) => document.getElementById(x);
   const cls = (id, c, on) => $id(id)?.classList.toggle(c, !!on);
-  const pick = (grp) => GROUPS[grp].map(g => g[0]).find(k => tests[k]) || null;
+  const pick = (grp) => GROUPS[grp].includes(probe) ? probe : null;
 
   const RIN = { ok: 'AC > BC', part: 'AC > BC, quiet', no: 'BC > AC' };
   const HIT = { ok: 'eyes stay on target', part: 'small catch-up', no: 'catch-up saccade' };
@@ -195,31 +179,30 @@ const Hear = (() => {
     cls('hpose', 'on', !!hallSide);
     $id('hposeT').textContent = hallSide ? `head 45° ${hallSide === 'R' ? 'right' : 'left'} · lying back` : '';
 
-    // findings strip
-    const rw = recorded.weber;
-    Clinic.setCell('web', null, rw ? (l.weber === 'mid' ? 'ok' : 'part') : '', WEB[l.weber]);
-    Clinic.setNote('web', rw ? (l.weber === 'mid' ? 'symmetrical' : `louder ${WEB[l.weber]}: conductive there, or nerve loss on the other side`) : 'fork on the forehead');
-    const rin = (s) => recorded[`rinne${s}`] ? [l.rinne[s], RIN[l.rinne[s]]] : ['', ''];
+    // findings strip: every result, always
+    Clinic.setCell('web', null, l.weber === 'mid' ? 'ok' : 'part', WEB[l.weber]);
+    Clinic.setNote('web', l.weber === 'mid' ? 'symmetrical' : `louder ${WEB[l.weber]}: conductive there, or nerve loss on the other side`);
+    const rin = (s) => [l.rinne[s], RIN[l.rinne[s]]];
     const rR = rin('R'), rL = rin('L');
     Clinic.setCell('rin', 'R', rR[0], rR[1]); Clinic.setCell('rin', 'L', rL[0], rL[1]);
-    Clinic.setNote('rin', Clinic.sides(rR, rL) || 'mastoid, then beside the ear');
-    const hi = (s) => recorded[`hit${s}`] ? [l.hit[s], HIT[l.hit[s]]] : ['', ''];
+    Clinic.setNote('rin', Clinic.sides(rR, rL));
+    const hi = (s) => [l.hit[s], HIT[l.hit[s]]];
     const hR = hi('R'), hL = hi('L');
     Clinic.setCell('hit', 'R', hR[0], hR[1]); Clinic.setCell('hit', 'L', hL[0], hL[1]);
-    Clinic.setNote('hit', Clinic.sides(hR, hL) || 'quick turn, eyes on your nose');
+    Clinic.setNote('hit', Clinic.sides(hR, hL));
     const ny = NYS[l.nys];
-    Clinic.setCell('nys', null, recorded.gaze ? ny[0] : '', ny[1]);
-    Clinic.setNote('nys', recorded.gaze ? (l.nys === 'beatsL' ? 'fast phase away from the bad ear' : l.nys === 'alt' ? 'changes direction with gaze' : l.nys === 'attacks' ? 'none between attacks' : 'eyes steady') : 'look straight ahead');
-    const ha = (s) => recorded[`hall${s}`] ? [l.hall[s], l.hall[s] === 'no' ? 'positive' : 'negative'] : ['', ''];
+    Clinic.setCell('nys', null, ny[0], ny[1]);
+    Clinic.setNote('nys', l.nys === 'beatsL' ? 'fast phase away from the bad ear' : l.nys === 'alt' ? 'changes direction with gaze' : l.nys === 'attacks' ? 'none between attacks' : 'eyes steady');
+    const ha = (s) => [l.hall[s], l.hall[s] === 'no' ? 'positive' : 'negative'];
     const aR = ha('R'), aL = ha('L');
     Clinic.setCell('hal', 'R', aR[0], aR[1]); Clinic.setCell('hal', 'L', aL[0], aL[1]);
-    Clinic.setNote('hal', Clinic.sides(aR, aL) || 'turn 45°, lie back');
+    Clinic.setNote('hal', Clinic.sides(aR, aL));
     paintCircuit();
   }
 
   function paintCircuit() {
-    const chains = [];
-    Object.keys(tests).forEach(k => { if (tests[k]) chains.push(...CHAINS[k]); });
+    // at rest every test is drawn; while a card is hovered, only its own pathway
+    const chains = probe ? CHAINS[probe] : Object.values(CHAINS).flat();
     Clinic.paint($id('hcircuit'), chains, (HC_LES[mode] || NONE).blk);
   }
 
@@ -231,22 +214,13 @@ const Hear = (() => {
   }
 
   function bind(root) {
-    root.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => {
-      const k = b.dataset.test, grp = Object.keys(GROUPS).find(g => GROUPS[g].some(x => x[0] === k));
-      const turnOn = !tests[k];
-      GROUPS[grp].forEach(([x]) => { tests[x] = false; });       // pick one: clicking the active one clears it
-      tests[k] = turnOn;
-      if (turnOn) recorded[k] = true;
-      root.querySelectorAll('[data-test]').forEach(x => x.classList.toggle('on', tests[x.dataset.test]));
-      apply();
-    }));
+    Clinic.probe(root, k => { probe = k; apply(); });
     root.querySelectorAll('[data-hl]').forEach(b => b.addEventListener('click', () => {
       mode = mode === b.dataset.hl ? null : b.dataset.hl;
       root.querySelectorAll('[data-hl]').forEach(c => c.classList.toggle('on', c.dataset.hl === mode));
-      recorded = {};                                                // new patient: start a fresh record
-      Object.keys(tests).forEach(k => { if (tests[k]) recorded[k] = true; });
       paintLesion(); apply();
     }));
+    probe = null;
     paintLesion();
     requestAnimationFrame(apply);
   }

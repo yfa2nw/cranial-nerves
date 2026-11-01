@@ -4,10 +4,8 @@
 // ─────────────────────────────────────────────────────────────
 
 const Smell = (() => {
-  let mode = null, last = null;
-  const tests = { coffeeR: false, coffeeL: false, ammonia: false, flavor: false };
-  const TESTS = [['coffeeR', 'Coffee · right nostril', '◖'], ['coffeeL', 'Coffee · left nostril', '◗'],
-                 ['ammonia', 'Ammonia', '☁'], ['flavor', 'Eat a strawberry', '◇']];
+  // probe = the test acted out while its findings card is hovered; every result is always shown
+  let mode = null, probe = null;
 
   // ── smell circuit (viewBox 0 0 300 320): right side on the left
   const SC = {
@@ -93,15 +91,14 @@ const Smell = (() => {
     const act = Clinic.act;
     const chips = Object.entries(SMELL_LESIONS).map(([k, l]) =>
       `<button class="dchip ck ${mode === k ? 'on' : ''}" data-sl="${k}" data-tip="S-${k}"><i></i>${l.chip}</button>`).join('');
-    const sw = TESTS.map(([k, l, g]) => Clinic.sw(k, 'test', tests[k], g, l, `st-${k}`)).join('');
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
         <div class="patient">${patientSVG()}${Clinic.findings([
-          { k: 'nR', label: 'Right nostril', icon: '◖', kind: 'val' },
-          { k: 'nL', label: 'Left nostril', icon: '◗', kind: 'val' },
-          { k: 'amm', label: 'Ammonia · V', icon: '☁', kind: 'val' },
-          { k: 'flav', label: 'Flavour', icon: '◇', kind: 'val' }])}</div>
+          { k: 'nR', label: 'Right nostril', icon: '◖', kind: 'val', test: 'coffeeR', tip: 'st-coffeeR' },
+          { k: 'nL', label: 'Left nostril', icon: '◗', kind: 'val', test: 'coffeeL', tip: 'st-coffeeL' },
+          { k: 'amm', label: 'Ammonia · V', icon: '☁', kind: 'val', test: 'ammonia', tip: 'st-ammonia' },
+          { k: 'flav', label: 'Flavour', icon: '◇', kind: 'val', test: 'flavor', tip: 'st-flavor' }])}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -109,12 +106,8 @@ const Smell = (() => {
           <div class="step-h"><span class="sn">1</span><b>Pick a lesion</b>${act('click')}<small>one at a time · click again to clear</small></div>
           <div class="dchips">${chips}</div>
         </section>
-        <section class="step">
-          <div class="step-h"><span class="sn">2</span><b>Test smell</b>${act('click')}<small>always one nostril at a time · eyes closed</small></div>
-          <div class="switches grid2">${sw}</div>
-        </section>
       </div>
-      ${Clinic.explainShell()}
+      ${Clinic.explainShell(2)}
     </div>`;
   }
 
@@ -125,44 +118,43 @@ const Smell = (() => {
   function apply() {
     if (!$id('bubble')) return;
     const l = SMELL_LESIONS[mode] || { R: 'ok', L: 'ok', flavor: 'ok' };
-    // the picture shows one nostril test at a time (the latest one switched on); the strip keeps both results
-    const side = ['coffeeR', 'coffeeL'].includes(last) && tests[last] ? last
-      : tests.coffeeR ? 'coffeeR' : tests.coffeeL ? 'coffeeL' : null;
+    // the picture acts out the hovered test; the strip always shows every result
+    const side = ['coffeeR', 'coffeeL'].includes(probe) ? probe : null;
     cls('fingerL', 'on', side === 'coffeeR');                 // finger closes the OTHER nostril
     cls('fingerR', 'on', side === 'coffeeL');
-    cls('vialR', 'on', side === 'coffeeR' || (!side && tests.ammonia));
+    cls('vialR', 'on', side === 'coffeeR' || probe === 'ammonia');
     cls('vialL', 'on', side === 'coffeeL');
-    $id('vialRt').textContent = !side && tests.ammonia ? 'NH₃' : '☕';
-    cls('berry', 'on', tests.flavor);
+    $id('vialRt').textContent = probe === 'ammonia' ? 'NH₃' : '☕';
+    cls('berry', 'on', probe === 'flavor');
     cls('csf', 'on', l.csf);
     cls('phantomDot', 'on', l.phantom);
 
-    // thought bubble: last thing tested, or the phantom smell
+    // thought bubble: the hovered test, or the phantom smell
     const say = {
       coffeeR: [l.R, `${{ ok: '☕ coffee', part: '◐ faint…odd', no: '… nothing' }[l.R]}`],
       coffeeL: [l.L, `${{ ok: '☕ coffee', part: '◐ faint…odd', no: '… nothing' }[l.L]}`],
       ammonia: ['ok', '☁ it stings!'],
       flavor:  [l.flavor, `${{ ok: '◇ strawberry', part: '◐ dull', no: '◇ just sweet' }[l.flavor]}`]
     };
-    const cur = last && tests[last] ? say[last] : l.phantom ? ['no', '⚠ burning?!'] : null;
+    const cur = probe ? say[probe] : l.phantom ? ['no', '⚠ burning?!'] : null;
     cls('bubble', 'on', !!cur);
     if (cur) { $id('bubbleT').textContent = cur[1]; $id('bubble').setAttribute('class', `bubble on ${cur[0]}`); }
 
     // findings strip
-    Clinic.setCell('nR', null, tests.coffeeR ? l.R : '', WORD[l.R]);
-    Clinic.setNote('nR', tests.coffeeR ? '' : 'switch on Coffee · right');
-    Clinic.setCell('nL', null, tests.coffeeL ? l.L : '', WORD[l.L]);
-    Clinic.setNote('nL', tests.coffeeL ? '' : 'switch on Coffee · left');
-    Clinic.setCell('amm', null, tests.ammonia ? 'ok' : '', 'stings');
-    Clinic.setNote('amm', tests.ammonia ? 'trigeminal, not olfactory' : 'switch on Ammonia');
-    Clinic.setCell('flav', null, tests.flavor ? l.flavor : '', { ok: 'strawberry', part: 'dull', no: 'just sweet' }[l.flavor]);
-    Clinic.setNote('flav', tests.flavor ? (l.flavor === 'ok' ? '' : 'taste intact, smell part missing') : 'switch on Strawberry');
+    Clinic.setCell('nR', null, l.R, WORD[l.R]);
+    Clinic.setNote('nR', 'coffee · left nostril closed');
+    Clinic.setCell('nL', null, l.L, WORD[l.L]);
+    Clinic.setNote('nL', 'coffee · right nostril closed');
+    Clinic.setCell('amm', null, 'ok', 'stings');
+    Clinic.setNote('amm', 'trigeminal, not olfactory');
+    Clinic.setCell('flav', null, l.flavor, { ok: 'strawberry', part: 'dull', no: 'just sweet' }[l.flavor]);
+    Clinic.setNote('flav', l.flavor === 'ok' ? 'taste + smell' : 'taste intact, smell part missing');
     paintCircuit();
   }
 
   function paintCircuit() {
-    const chains = [];
-    Object.keys(tests).forEach(k => { if (tests[k]) chains.push(...CHAINS[k]); });
+    // at rest every test is drawn; while a card is hovered, only its own pathway
+    const chains = probe ? CHAINS[probe] : Object.values(CHAINS).flat();
     Clinic.paint($id('scircuit'), chains, (SC_LES[mode] || NONE).blk);
   }
 
@@ -174,18 +166,13 @@ const Smell = (() => {
   }
 
   function bind(root) {
-    root.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => {
-      const k = b.dataset.test;
-      tests[k] = !tests[k];
-      if (tests[k]) last = k;
-      b.classList.toggle('on', tests[k]);
-      apply();
-    }));
+    Clinic.probe(root, k => { probe = k; apply(); });
     root.querySelectorAll('[data-sl]').forEach(b => b.addEventListener('click', () => {
       mode = mode === b.dataset.sl ? null : b.dataset.sl;
       root.querySelectorAll('[data-sl]').forEach(c => c.classList.toggle('on', c.dataset.sl === mode));
       paintLesion(); apply();
     }));
+    probe = null;
     paintLesion();
     requestAnimationFrame(apply);
   }

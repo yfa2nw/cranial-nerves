@@ -4,14 +4,8 @@
 // ─────────────────────────────────────────────────────────────
 
 const Vision = (() => {
-  let mode = null;
-  const tests = { fieldR: false, fieldL: false, lightR: false, lightL: false, swing: false };
-  // one test per group is active at a time; results are remembered once done (like recording each eye)
-  const GROUPS = {
-    field: [['fieldR', 'Right eye', '◐'], ['fieldL', 'Left eye', '◑']],
-    light: [['lightR', 'Right eye', '☀'], ['lightL', 'Left eye', '☀'], ['swing', 'Swinging', '⇄']]
-  };
-  let recorded = {};
+  // probe = the test acted out while its findings card is hovered; every result is always shown
+  let mode = null, probe = null;
 
   // ── visual circuit (viewBox 0 0 300 320), front view: right eye on the left
   // hfL = carries the left visual field (→ right hemisphere), hfR = the right field
@@ -92,16 +86,14 @@ const Vision = (() => {
     const act = Clinic.act;
     const chips = Object.entries(VISION_LESIONS).map(([k, l]) =>
       `<button class="dchip ck ${mode === k ? 'on' : ''}" data-vl="${k}" data-tip="V-${k}"><i></i>${l.chip}</button>`).join('');
-    const seg = (grp) => `<div class="seg2">${GROUPS[grp].map(([k, l, g]) =>
-      `<button class="seg-b ${tests[k] ? 'on' : ''}" data-test="${k}" data-tip="vt-${k}"><span>${g}</span>${l}</button>`).join('')}</div>`;
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
         <div class="patient">${patientSVG()}${Clinic.findings([
-          { k: 'fRE', label: 'Right eye field', icon: '◐', kind: 'field' },
-          { k: 'fLE', label: 'Left eye field', icon: '◑', kind: 'field' },
-          { k: 'pup', label: 'Pupils to light', icon: '☀', kind: 'val' },
-          { k: 'rapd', label: 'Swinging light', icon: '⇄', kind: 'val' }])}</div>
+          { k: 'fRE', label: 'Right eye field', icon: '◐', kind: 'field', test: 'fieldR', tip: 'vt-fieldR' },
+          { k: 'fLE', label: 'Left eye field', icon: '◑', kind: 'field', test: 'fieldL', tip: 'vt-fieldL' },
+          { k: 'pup', label: 'Light in each eye', icon: '☀', kind: 'lr', sides: { R: 'lightR', L: 'lightL' }, tip: 'vt-lightL' },
+          { k: 'rapd', label: 'Swinging light', icon: '⇄', kind: 'val', test: 'swing', tip: 'vt-swing' }])}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -109,15 +101,8 @@ const Vision = (() => {
           <div class="step-h"><span class="sn">1</span><b>Pick a lesion</b>${act('click')}<small>one at a time · click again to clear</small></div>
           <div class="dchips">${chips}</div>
         </section>
-        <section class="step">
-          <div class="step-h"><span class="sn">2</span><b>Test fields &amp; pupils</b>${act('click')}<small>results stay recorded · fields drawn as the patient sees them</small></div>
-          <div class="sig-ctrl groups">
-            <div class="ctrl-grp"><span class="cg-l">Confrontation · one eye at a time</span>${seg('field')}</div>
-            <div class="ctrl-grp"><span class="cg-l">Light · one at a time</span>${seg('light')}</div>
-          </div>
-        </section>
       </div>
-      ${Clinic.explainShell()}
+      ${Clinic.explainShell(2)}
     </div>`;
   }
 
@@ -128,8 +113,9 @@ const Vision = (() => {
     if (!$id('vpR')) return;
     const l = VISION_LESIONS[mode] || { LE: 'none', RE: 'none' };
     const rapdR = l.rapd === 'R';
-    const field = GROUPS.field.map(g => g[0]).find(k => tests[k]) || null;
-    const light = GROUPS.light.map(g => g[0]).find(k => tests[k]) || null;
+    // the hovered test, acted out on the patient
+    const field = ['fieldR', 'fieldL'].includes(probe) ? probe : null;
+    const light = ['lightR', 'lightL', 'swing'].includes(probe) ? probe : null;
     cls('occL', 'on', field === 'fieldR');                 // cover the other eye
     cls('occR', 'on', field === 'fieldL');
     const litR = light === 'lightR' || light === 'swing', litL = light === 'lightL';
@@ -140,23 +126,22 @@ const Vision = (() => {
     if (light === 'swing') r = rapdR ? 12.5 : 5;
     ['vpR', 'vpL'].forEach(id => $id(id).style.r = `${r}px`);
 
-    // findings: everything tested so far stays recorded
-    Clinic.setField('fRE', recorded.fieldR ? l.RE : 'none', recorded.fieldR);
-    Clinic.setNote('fRE', recorded.fieldR ? (l.RE === 'none' ? 'full field' : 'defect recorded') : 'test the right eye');
-    Clinic.setField('fLE', recorded.fieldL ? l.LE : 'none', recorded.fieldL);
-    Clinic.setNote('fLE', recorded.fieldL ? (l.LE === 'none' ? 'full field' : 'defect recorded') : 'test the left eye');
-    const anyLight = recorded.lightR || recorded.lightL;
-    const weakR = recorded.lightR && rapdR;
-    Clinic.setCell('pup', null, anyLight ? (weakR ? 'part' : 'ok') : '', weakR ? 'weak R' : 'brisk');
-    Clinic.setNote('pup', anyLight ? (weakR ? 'weaker from the right eye' : 'both pupils, direct + consensual') : 'shine a light');
-    Clinic.setCell('rapd', null, recorded.swing ? (rapdR ? 'no' : 'ok') : '', rapdR ? 'RAPD' : 'none');
-    Clinic.setNote('rapd', recorded.swing ? (rapdR ? 'both dilate on reaching the right eye' : 'both stay small on each swing') : 'swing the light');
+    // findings: every result, always (fields drawn as the patient sees them)
+    Clinic.setField('fRE', l.RE, true);
+    Clinic.setNote('fRE', l.RE === 'none' ? 'full field' : 'defect');
+    Clinic.setField('fLE', l.LE, true);
+    Clinic.setNote('fLE', l.LE === 'none' ? 'full field' : 'defect');
+    const pR = rapdR ? ['part', 'weak'] : ['ok', 'brisk'], pL = ['ok', 'brisk'];
+    Clinic.setCell('pup', 'R', ...pR); Clinic.setCell('pup', 'L', ...pL);
+    Clinic.setNote('pup', rapdR ? 'both pupils react less to the right eye' : 'both pupils, direct + consensual');
+    Clinic.setCell('rapd', null, rapdR ? 'no' : 'ok', rapdR ? 'RAPD' : 'none');
+    Clinic.setNote('rapd', rapdR ? 'both dilate on reaching the right eye' : 'both stay small on each swing');
     paintCircuit();
   }
 
   function paintCircuit() {
-    const chains = [];
-    Object.keys(tests).forEach(k => { if (tests[k]) chains.push(...CHAINS[k]); });
+    // at rest every test is drawn; while a card is hovered, only its own pathway
+    const chains = probe ? CHAINS[probe] : Object.values(CHAINS).flat();
     Clinic.paint($id('vcircuit'), chains, (VC_LES[mode] || NONE).blk);
   }
 
@@ -168,22 +153,13 @@ const Vision = (() => {
   }
 
   function bind(root) {
-    root.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => {
-      const k = b.dataset.test, grp = GROUPS.field.some(g => g[0] === k) ? 'field' : 'light';
-      const turnOn = !tests[k];
-      GROUPS[grp].forEach(([x]) => { tests[x] = false; });     // pick one: clicking the active one clears it
-      tests[k] = turnOn;
-      if (turnOn) recorded[k] = true;
-      root.querySelectorAll('[data-test]').forEach(x => x.classList.toggle('on', tests[x.dataset.test]));
-      apply();
-    }));
+    Clinic.probe(root, k => { probe = k; apply(); });
     root.querySelectorAll('[data-vl]').forEach(b => b.addEventListener('click', () => {
       mode = mode === b.dataset.vl ? null : b.dataset.vl;
       root.querySelectorAll('[data-vl]').forEach(c => c.classList.toggle('on', c.dataset.vl === mode));
-      recorded = {};                                              // new patient: start a fresh record
-      Object.keys(tests).forEach(k => { if (tests[k]) recorded[k] = true; });
       paintLesion(); apply();
     }));
+    probe = null;
     paintLesion();
     requestAnimationFrame(apply);
   }

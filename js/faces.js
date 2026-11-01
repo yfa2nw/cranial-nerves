@@ -4,12 +4,11 @@
 // ─────────────────────────────────────────────────────────────
 
 const Face = (() => {
-  let mode = null, held = null, nerve = 'VII';
-  const tests = { corneal: false, sensation: false, taste: false, sound: false, tears: false };
+  // held = the expression being hovered · probe = the test acted out while its findings card is hovered
+  let mode = null, held = null, probe = null, nerve = 'VII';
+  const TESTS = ['corneal', 'sensation', 'taste', 'sound', 'tears'];
   const EXPR = [['brows', 'Raise brows', '⌃'], ['close', 'Close eyes', '◡'], ['smile', 'Smile', '◠'],
                 ['puff', 'Puff cheeks', '○'], ['jaw', 'Open jaw', '▽'], ['clench', 'Clench', '▣']];
-  const TESTS = [['corneal', 'Corneal · R', '✧'], ['sensation', 'Sensation map', '▦'], ['taste', 'Taste · R', '◇'],
-                 ['sound', 'Loud sound', '♪'], ['tears', 'Tears', '◖']];
 
   // ── face circuit (viewBox 0 0 300 320): right VII on the left, V in the middle, left VII on the right
   const FC = {
@@ -154,15 +153,15 @@ const Face = (() => {
     const chip = ([k, l]) => `<button class="dchip ck ${mode === k ? 'on' : ''}" data-fl="${k}" data-tip="F-${k}"><i></i>${l.chip}</button>`;
     const group = (n) => `<div class="dgroup ${n === id ? 'mine' : ''}"><span class="dg-n">${n}</span>${Object.entries(FACE_LESIONS).filter(([, l]) => l.n === n).map(([k, l]) => chip([k, l])).join('')}</div>`;
     const ex = EXPR.map(([k, l, g]) => `<div class="mchip hv xchip" data-ex="${k}" data-tip="fx-${k}"><b>${g}</b><span class="xl">${l}</span></div>`).join('');
-    const sw = TESTS.map(([k, l, g]) => Clinic.sw(k, 'test', tests[k], g, l, `ft-${k}`)).join('');
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
         <div class="patient">${faceSVG()}${Clinic.findings([
-          { k: 'blink', label: 'Corneal blink', icon: '✧', kind: 'lr' },
-          { k: 'taste', label: 'Taste', icon: '◇', kind: 'tongue' },
-          { k: 'sound', label: 'Loud sound', icon: '♪', kind: 'lr' },
-          { k: 'tears', label: 'Tears', icon: '◖', kind: 'lr' }])}</div>
+          { k: 'blink', label: 'Corneal blink', icon: '✧', kind: 'lr', test: 'corneal', tip: 'ft-corneal' },
+          { k: 'sens', label: 'Sensation', icon: '▦', kind: 'val', test: 'sensation', tip: 'ft-sensation' },
+          { k: 'taste', label: 'Taste', icon: '◇', kind: 'tongue', test: 'taste', tip: 'ft-taste' },
+          { k: 'sound', label: 'Loud sound', icon: '♪', kind: 'lr', test: 'sound', tip: 'ft-sound' },
+          { k: 'tears', label: 'Tears', icon: '◖', kind: 'lr', test: 'tears', tip: 'ft-tears' }])}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -171,17 +170,8 @@ const Face = (() => {
           <div class="dgroups">${group('V')}${group('VII')}</div>
         </section>
         <section class="step">
-          <div class="step-h"><span class="sn">2</span><b>Test the face</b><small>watch the face and the circuit respond</small></div>
-          <div class="test-grid">
-            <div class="tcol grow">
-              <div class="sub-h">${act('hover')}ask the patient to…</div>
-              <div class="mchips xchips">${ex}</div>
-            </div>
-            <div class="tcol">
-              <div class="sub-h">${act('click')}tests on / off</div>
-              <div class="switches">${sw}</div>
-            </div>
-          </div>
+          <div class="step-h"><span class="sn">2</span><b>Ask the patient to…</b>${act('hover')}<small>watch the face and the circuit respond</small></div>
+          <div class="mchips xchips">${ex}</div>
         </section>
       </div>
       ${Clinic.explainShell()}
@@ -245,44 +235,45 @@ const Face = (() => {
     $id('mouthIn').setAttribute('d', mo.inner);
     cls('mouthIn', 'open', mo.open);
 
-    // tests
-    cls('wisp', 'on', tests.corneal);
-    const blinkR = tests.corneal && s.afferent && !s.weakUpR, blinkL = tests.corneal && s.afferent;
+    // the hovered test, acted out on the face
+    const corneal = probe === 'corneal', sens = probe === 'sensation';
+    const blinkR = s.afferent && !s.weakUpR, blinkL = s.afferent;  // who blinks when the right cornea is touched
+    cls('wisp', 'on', corneal);
     ['R', 'L'].forEach(side => {
-      const on = side === 'R' ? blinkR : blinkL;
+      const on = corneal && (side === 'R' ? blinkR : blinkL);
       cls(`flidw-${side}`, 'blink', on && !s.weakCorneal);
       cls(`flidw-${side}`, 'blinkWeak', on && s.weakCorneal);
-      cls(`flidw-${side}`, 'idle', !tests.corneal && !held);
+      cls(`flidw-${side}`, 'idle', !corneal && !held);
     });
-    cls('fderm', 'on', tests.sensation);
+    cls('fderm', 'on', sens);
     cls('dR1', 'numb', mode === 'v1');
     cls('dR3', 'numb', mode === 'v3');
     cls('onion', 'on', mode === 'spinalV');
-    cls('bolts', 'on', tests.sensation && mode === 'neuralgia');
-    cls('wavesR', 'on', tests.sound); cls('wavesL', 'on', tests.sound);
-    cls('wavesR', 'loud', tests.sound && s.hyperR);
-    cls('tearR', 'on', tests.tears && !s.dryR);
-    cls('tearL', 'on', tests.tears);
+    cls('bolts', 'on', sens && mode === 'neuralgia');
+    cls('wavesR', 'on', probe === 'sound'); cls('wavesL', 'on', probe === 'sound');
+    cls('wavesR', 'loud', probe === 'sound' && s.hyperR);
+    cls('tearR', 'on', probe === 'tears' && !s.dryR);
+    cls('tearL', 'on', probe === 'tears');
     cls('vesic', 'on', s.vesicles);
 
-    // findings strip
-    const blink = (on) => !tests.corneal ? ['', ''] : !on ? ['no', 'no blink'] : s.weakCorneal ? ['part', 'weak'] : ['ok', 'blinks'];
-    const lr = (k, r, l, off) => {
-      Clinic.setCell(k, 'R', ...r); Clinic.setCell(k, 'L', ...l);
-      Clinic.setNote(k, r[0] || l[0] ? Clinic.sides(r, l) : off);
-    };
-    lr('blink', blink(blinkR), blink(blinkL), 'switch on Corneal');
-    Clinic.setZones('taste', { aR: tests.taste ? (s.noTasteR ? 'no' : 'ok') : '' });
-    Clinic.setNote('taste', tests.taste ? (s.noTasteR ? 'front ⅔ right: lost' : 'front ⅔ right: tastes') : 'switch on Taste');
-    lr('tears', tests.tears ? (s.dryR ? ['no', 'dry'] : ['ok', 'normal']) : ['', ''], tests.tears ? ['ok', 'normal'] : ['', ''], 'switch on Tears');
-    lr('sound', tests.sound ? (s.hyperR ? ['no', 'too loud'] : ['ok', 'comfortable']) : ['', ''], tests.sound ? ['ok', 'comfortable'] : ['', ''], 'switch on Loud sound');
+    // findings strip: every result, always
+    const blink = (on) => !on ? ['no', 'no blink'] : s.weakCorneal ? ['part', 'weak'] : ['ok', 'blinks'];
+    const lr = (k, r, l) => { Clinic.setCell(k, 'R', ...r); Clinic.setCell(k, 'L', ...l); Clinic.setNote(k, Clinic.sides(r, l)); };
+    lr('blink', blink(blinkR), blink(blinkL));
+    const SENS = { v1: ['no', 'R V1 numb'], v3: ['no', 'R V3 numb'], spinalV: ['part', 'R onion-skin'], neuralgia: ['part', 'trigger zone'] };
+    const sv = SENS[mode] || ['ok', 'normal'];
+    Clinic.setCell('sens', null, sv[0], sv[1]);
+    Clinic.setNote('sens', mode === 'neuralgia' ? 'touch sets off the pain' : 'pinprick, both sides');
+    Clinic.setZones('taste', { aR: s.noTasteR ? 'no' : 'ok' });
+    Clinic.setNote('taste', s.noTasteR ? 'front ⅔ right: lost' : 'front ⅔ right: tastes');
+    lr('tears', s.dryR ? ['no', 'dry'] : ['ok', 'normal'], ['ok', 'normal']);
+    lr('sound', s.hyperR ? ['no', 'too loud'] : ['ok', 'comfortable'], ['ok', 'comfortable']);
     paintCircuit();
   }
 
   function paintCircuit() {
-    const chains = [];
-    if (held && EX_CHAIN[held]) chains.push(...CHAINS[EX_CHAIN[held]]);
-    Object.keys(tests).forEach(k => { if (tests[k]) chains.push(...CHAINS[k]); });
+    // a hovered expression or test shows its own pathway; at rest, every test's pathway is drawn
+    const chains = held ? CHAINS[EX_CHAIN[held]] : probe ? CHAINS[probe] : TESTS.flatMap(k => CHAINS[k]);
     Clinic.paint($id('fcircuit'), chains, (FC_LES[mode] || NONE).blk);
   }
 
@@ -298,16 +289,13 @@ const Face = (() => {
       b.addEventListener('mouseenter', () => { held = b.dataset.ex; apply(); });
       b.addEventListener('mouseleave', () => { held = null; apply(); });
     });
-    root.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => {
-      const k = b.dataset.test;
-      tests[k] = !tests[k]; b.classList.toggle('on', tests[k]); apply();
-    }));
+    Clinic.probe(root, k => { probe = k; apply(); });
     root.querySelectorAll('[data-fl]').forEach(b => b.addEventListener('click', () => {
       mode = mode === b.dataset.fl ? null : b.dataset.fl;
       root.querySelectorAll('[data-fl]').forEach(c => c.classList.toggle('on', c.dataset.fl === mode));
       paintLesion(); apply();
     }));
-    held = null;
+    held = null; probe = null;
     paintLesion();
     requestAnimationFrame(apply);
   }
