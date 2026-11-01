@@ -13,42 +13,58 @@
   <!-- shared gradients / patterns / filters, referenced by every svg on the page -->
   <svg id="defs" width="0" height="0" aria-hidden="true" style="position:absolute"></svg>
 
+  <!-- site level: title + the reading room (popups that don't depend on the chosen nerve) -->
   <header class="top">
     <div class="brand">
       <div class="brand-row"><h1>Cranial <em>Nerves</em></h1><button class="help-btn" id="helpInfo" aria-label="How to use this page" title="How to use this page">?</button></div>
       <p>mapped pathways, anatomy, function, and lesions</p>
     </div>
-    <nav id="picker" class="picker" aria-label="Choose a nerve"></nav>
-    <!-- info popups, grouped by what they are for -->
-    <nav class="info-nav" aria-label="Background reading">
-      <div class="in-grp"><span class="in-l">Foundations</span>
-        <button class="in-b" id="fibreInfo"><i>⌬</i>Fibre types</button>
-        <button class="in-b" id="passInfo"><i>⊙</i>Foramina &amp; ganglia</button>
+    <nav class="info-nav glass" aria-label="Background reading">
+      <div class="in-head"><span class="in-t">Reading room</span>
+        <button class="in-search" id="abbrInfo"><i>⌕</i><span>Look up an abbreviation</span><kbd>/</kbd></button></div>
+      <div class="in-cols">
+        <div class="in-grp"><span class="in-l">Foundations</span>
+          <button class="in-b" id="fibreInfo"><i>⌬</i>Fibre types</button>
+          <button class="in-b" id="passInfo"><i>⊙</i>Foramina &amp; ganglia</button>
+          <button class="in-b" id="reflexInfo"><i>↺</i>Reflex arcs</button>
+        </div>
+        <div class="in-grp"><span class="in-l">How the senses work</span>
+          <button class="in-b" id="olfInfo" style="--c:var(--sva)"><i>◇</i>Smell</button>
+          <button class="in-b" id="sightInfo" style="--c:#9ad0ff"><i>◉</i>Sight</button>
+          <button class="in-b" id="hearInfo" style="--c:var(--coch)"><i>∿</i>Hearing</button>
+          <button class="in-b" id="tasteInfo" style="--c:#ff8fa3"><i>❦</i>Taste</button>
+        </div>
+        <div class="in-grp"><span class="in-l">At the bedside</span>
+          <button class="in-b" id="examInfo" style="--c:#5fe0a0"><i>✚</i>Physical exam</button>
+          <button class="in-b" id="lesionInfo" style="--c:#ff8a7a"><i>⌖</i>Lesion</button>
+        </div>
+        <div class="in-grp"><span class="in-l">Test yourself</span>
+          <button class="in-b" data-quiz="anat" style="--c:#b89cff"><i>◎</i>Anatomy</button>
+          <button class="in-b" data-quiz="path" style="--c:#b89cff"><i>⇢</i>Pathways</button>
+          <button class="in-b" data-quiz="clin" style="--c:#b89cff"><i>⚕</i>Clinical</button>
+        </div>
       </div>
-      <div class="in-grp"><span class="in-l">How the senses work</span>
-        <button class="in-b" id="olfInfo" style="--c:var(--sva)"><i>◇</i>Smell</button>
-        <button class="in-b" id="sightInfo" style="--c:#9ad0ff"><i>◉</i>Sight</button>
-        <button class="in-b" id="hearInfo" style="--c:var(--coch)"><i>∿</i>Hearing</button>
-        <button class="in-b" id="tasteInfo" style="--c:#ff8fa3"><i>❦</i>Taste</button>
-      </div>
-      <button class="in-search" id="abbrInfo"><i>⌕</i><span>Look up an abbreviation</span><kbd>/</kbd></button>
     </nav>
   </header>
+
+  <!-- nerve level: choose a nerve → its stations → its stage -->
+  <nav id="picker" class="picker" aria-label="Choose a nerve"></nav>
   <!-- compact switcher: slides in once the picker above scrolls out of view -->
   <div id="miniBar" class="mini-bar" aria-label="Quick nerve switcher"></div>
-  <div class="legend-row">
-    <span class="lg-title">Fibre types</span>
-    <div class="lg-body">
-      <div id="fiber-legend" class="legend"></div>
-      <div id="lg-key" class="lg-key"></div>
-    </div>
-  </div>
 
   <section id="route" class="route" aria-label="Pathway stations"></section>
 
   <main>
     <section class="stage-wrap glass">
-      <div class="stage-tools" id="tools"></div>
+      <!-- the fibre key sits on the stage's top edge, next to the tools that act on it -->
+      <div class="stage-head">
+        <span class="lg-title">Fibre types</span>
+        <div class="lg-body">
+          <div id="fiber-legend" class="legend"></div>
+          <div id="lg-key" class="lg-key"></div>
+        </div>
+        <div class="stage-tools" id="tools"></div>
+      </div>
       <div class="stage-scroll"><div id="stage"></div></div>
       <div id="shape-key" class="shape-key"></div>
     </section>
@@ -77,7 +93,10 @@
     </section>
   </main>
 
-  <footer class="foot">hover anything · dotted = inside the brainstem · beaded = postganglionic · white sparks show conduction direction</footer>
+  <footer class="foot">
+    <p>A study aid, not a clinical reference. The drawings are simplified schematics, so check anything that matters against a textbook or a clinician.</p>
+    <a href="https://github.com/yfa2nw/cranial-nerves" target="_blank" rel="noopener">source &amp; issues on GitHub ↗</a>
+  </footer>
 
   <div id="tip" class="tip" role="tooltip"></div>
 
@@ -101,6 +120,10 @@
   <script src="js/passages.js"></script>
   <script src="js/abbr.js"></script>
   <script src="js/help.js"></script>
+  <script src="js/exam.js"></script>
+  <script src="js/reflex.js"></script>
+  <script src="js/lesion.js"></script>
+  <script src="js/quiz.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

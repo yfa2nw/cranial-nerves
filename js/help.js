@@ -5,10 +5,10 @@
 
 const Help = (() => {
   const QUICK = [
-    ['◎', 'Pick a nerve', 'Click a numeral in the header — or press ← / →. Everything on the page switches to that nerve.'],
+    ['◎', 'Pick a nerve', 'Click a numeral in the picker under the title — or press ← / →. Everything on the page switches to that nerve.'],
     ['⟿', 'Follow the stage', 'Brainstem on the left, skull base in the middle, target on the right. Hover anything; sparks show which way signals travel.'],
     ['▦', 'Read the cards', 'i – iii zoom into key places along the route. v is the nerve’s signature idea, made interactive.'],
-    ['⚡', 'Try a lesion', 'In the clinical card: pick a lesion, run the tests, then read what happens and why.']
+    ['⚡', 'Try a lesion', 'In the clinical card: pick a lesion, run the tests, then read what happens and why. Then test yourself with a quiz from the Reading room.']
   ];
 
   // page-map regions: [title, what it is, how to use it (bullets), tip]
@@ -16,10 +16,10 @@ const Help = (() => {
     picker: ['Nerve picker', 'The twelve nerves, grouped by where they work: special senses, orbit, face, neck.',
       ['Click a disc to load that nerve across the whole page', 'Coloured dots under a numeral = the fibre types it carries', '← / → step through I → XII'],
       'Scroll down and a slim copy follows you at the top of the screen.'],
-    reading: ['Reading bar', 'Background popups, grouped by purpose.',
-      ['Foundations — how fibre types are named; foramina, ganglia & passenger fibres', 'How the senses work — smell, sight, hearing, taste, each a step-through of the physiology', 'Look up an abbreviation — a searchable list (press /)'],
-      'Choosing a nerve closes any open popup.'],
-    legend: ['Fibre types', 'One colour per fibre type, used everywhere on the page.',
+    reading: ['Reading room', 'Background popups under the title, one column per purpose. They don’t depend on the chosen nerve.',
+      ['Foundations — how fibre types are named; foramina, ganglia & passenger fibres; reflex arcs', 'How the senses work — smell, sight, hearing, taste, each a step-through of the physiology', 'At the bedside — the physical examination, and where is the lesion?', 'Test yourself — quizzes on anatomy & function, pathways & physiology, and clinical findings', 'Look up an abbreviation — the search box in its top-right corner (press /)'],
+      'Quizzes: pick a field and topic, answer with a click or 1–4, Enter for the next question. The end screen lists what to review.'],
+    legend: ['Fibre types', 'One colour per fibre type, used everywhere on the page. The key runs along the top of the stage.',
       ['Solid chip — carried by this nerve', 'Dashed chip — a passenger riding along inside it', 'Faint chip — not in this nerve', 'Click a chip to hide those fibres on the stage'],
       'The “Fibre types” popup explains what G/S, S/V and A/E mean.'],
     route: ['Pathway strip', 'Every station of the nerve in order, from nucleus to target.',
@@ -28,7 +28,7 @@ const Help = (() => {
     stage: ['Stage', 'The whole course in one picture: brainstem (left) → skull base and foramina (middle) → target organ (right). Smell and sight get their own layouts.',
       ['Hover any structure for a note; hovering a fibre highlights its whole nerve', 'White sparks travel in the direction of conduction', 'Region medals (circled numerals) switch nerves too'],
       'Dotted lines run inside the brainstem; beaded lines are postganglionic.'],
-    tools: ['Stage tools', 'Four switches in the stage’s top-right corner.',
+    tools: ['Stage tools', 'Four switches at the right end of the stage’s top strip.',
       ['Labels — show or hide text', 'Context — neighbouring nerves drawn faintly for orientation', 'Impulses — the moving sparks (off = lightest on your computer)', 'Isolate — hide every nerve but the selected one'],
       ''],
     cards: ['Cards i – iii', 'Close-ups of the places that matter for this nerve — a brainstem cross-section at its nucleus, then key passages such as the cavernous sinus, a foramen or the internal acoustic meatus.',
@@ -45,7 +45,7 @@ const Help = (() => {
       '']
   };
 
-  const KEYS = [['← →', 'previous / next nerve'], ['/', 'look up an abbreviation'], ['?', 'this help'], ['Esc', 'close a popup']];
+  const KEYS = [['← →', 'previous / next nerve'], ['/', 'look up an abbreviation'], ['?', 'this help'], ['1–4 · Enter', 'answer · next question (quiz)'], ['Esc', 'close a popup']];
 
   let part = 'stage', built = false;
 
@@ -55,15 +55,15 @@ const Help = (() => {
     return `
     <svg viewBox="0 0 360 536" class="hm-map">
       ${r('mini', 10, 4, 340, 20, 'sticky bar · on scroll', 'ghost')}
-      <g class="hm-static"><rect x="10" y="32" width="100" height="44" rx="5"/><text x="60" y="51">title</text><text x="60" y="66" class="sm">+ ? help</text></g>
-      ${r('picker', 116, 32, 234, 44, 'nerve picker')}
-      ${r('reading', 10, 82, 340, 20, 'reading bar · popups')}
-      ${r('legend', 10, 108, 340, 20, 'fibre types')}
-      ${r('route', 10, 134, 340, 24, 'pathway strip')}
-      ${r('stage', 10, 164, 340, 116, '')}
-      <g class="hm-zones"><path d="M124,190 L124,274 M236,190 L236,274"/><text x="67" y="236">brainstem</text><text x="180" y="236">skull base</text><text x="293" y="236">target</text></g>
-      <text x="20" y="182" class="hm-lab">STAGE</text>
-      ${r('tools', 270, 170, 74, 18, 'tools')}
+      <g class="hm-static"><rect x="10" y="30" width="340" height="16" rx="5"/><text x="180" y="41.5">title + ? help</text></g>
+      ${r('reading', 10, 50, 340, 28, 'reading room · popups · quizzes')}
+      ${r('picker', 10, 84, 340, 26, 'nerve picker')}
+      ${r('route', 10, 116, 340, 22, 'pathway strip')}
+      ${r('stage', 10, 144, 340, 136, '')}
+      ${r('legend', 16, 150, 248, 18, 'fibre types')}
+      ${r('tools', 270, 150, 74, 18, 'tools')}
+      <g class="hm-zones"><path d="M124,192 L124,274 M236,192 L236,274"/><text x="67" y="238">brainstem</text><text x="180" y="238">skull base</text><text x="293" y="238">target</text></g>
+      <text x="20" y="188" class="hm-lab">STAGE</text>
       ${r('cards', 10, 288, 110, 60, 'i')}${r('cards', 125, 288, 110, 60, 'ii')}${r('cards', 240, 288, 110, 60, 'iii')}
       ${r('clinic', 10, 356, 340, 96, 'iv · clinical')}
       ${r('sig', 10, 460, 340, 70, 'v · signature')}

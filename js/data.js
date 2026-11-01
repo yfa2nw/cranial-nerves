@@ -1279,6 +1279,10 @@ const TIPS = {
   trVisc:     { c: 'nerve', t: 'Visceral signals', l: ['Gut and vagal afferents → caudal NTS → hypothalamus'], f: ['GVA'] },
   trReflex:   { c: 'nucleus', t: 'Brainstem reflexes', l: ['Salivatory nuclei, swallowing, gag, gaping'] },
 
+  // reflex arcs popup
+  'L-rfAff':  { c: 'lesion', t: 'Afferent limb cut', l: ['No reflex when this side is stimulated — on either side'] },
+  'L-rfEff':  { c: 'lesion', t: 'Efferent limb cut', l: ['This side never responds, whichever side is stimulated'] },
+
   // signature
   thal:       { c: 'brain', t: 'Thalamus', l: ['Relay for vision, hearing, touch, taste'] },
   ctxPrim:    { c: 'brain', t: 'Primary sensory cortex' },

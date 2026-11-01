@@ -117,7 +117,7 @@ const STAGE_NERVES = {
   VIII: [
     ...[-0.4, 1.1, 2.6, 4.1].map(a => ({ f: 'SSA', cls: 'coch', tip: 'cochDend',
       d: `M${(1110 + 40 * Math.cos(a)).toFixed(1)},${(570 + 40 * Math.sin(a)).toFixed(1)} L${(1110 + 16 * Math.cos(a)).toFixed(1)},${(570 + 16 * Math.sin(a)).toFixed(1)}` })),
-    { f: 'SSA', cls: 'coch', tip: 'VIII-c', d: 'M1110,570 C1070,546 1030,526 980,514 C920,502 860,500 790,498 C720,496 660,494 604,490 C520,484 440,478 388,474' },
+    { f: 'SSA', cls: 'coch', tip: 'VIII-c', d: 'M1110,570 C1070,546 1030,526 980,514 C920,502 860,500 790,498 C720,496 660,494 604,490 C520,484 440,474 368,468' },
     { f: 'SSA', cls: 'vest', tip: 'vAmpA', d: 'M1208,422 C1196,436 1184,446 1172,452' },
     { f: 'SSA', cls: 'vest', tip: 'vUtr', d: 'M1244,446 C1216,449 1192,451 1172,452' },
     { f: 'SSA', cls: 'vest', deep: 1, tip: 'vAmpL', d: 'M1284,444 C1250,458 1206,458 1172,452' },
@@ -125,19 +125,19 @@ const STAGE_NERVES = {
     { f: 'SSA', cls: 'vest', tip: 'vSac', d: 'M1222,484 C1208,488 1194,490 1180,490' },
     { f: 'SSA', cls: 'vest', deep: 1, tip: 'vAmpP', d: 'M1298,482 C1262,498 1222,500 1180,490' },
     { f: 'SSA', cls: 'vest', tip: 'VIII-vi', d: 'M1180,490 C1100,488 1000,484 900,480 C850,478 806,477 762,476' },
-    { f: 'SSA', cls: 'vest', tip: 'VIII-v', d: 'M726,470 C680,470 640,468 604,466 C520,464 440,462 388,460' },
-    { f: 'SSA', cls: 'vest', tip: 'vcb', d: 'M402,462 C418,480 434,500 450,516' },
-    { f: 'SSA', cls: 'coch', intra: 1, tip: 'VIII-cn', d: 'M388,474 C384,468 380,463 376,458' },
-    { f: 'SSA', cls: 'vest', intra: 1, tip: 'VIII-vn', d: 'M388,460 C376,452 366,446 356,438' },
-    { f: 'SSA', cls: 'coch', intra: 1, tip: 'trap', d: 'M370,460 C352,456 334,455 318,456' },
-    { f: 'SSA', cls: 'coch', intra: 1, tip: 'trapX', d: 'M372,464 C330,474 290,472 270,470 C250,468 236,462 224,456' },
+    { f: 'SSA', cls: 'vest', tip: 'VIII-v', d: 'M726,470 C680,470 640,468 604,466 C520,464 440,462 368,460' },
+    { f: 'SSA', cls: 'vest', tip: 'vcb', d: 'M368,460 C390,474 420,496 450,516' },
+    { f: 'SSA', cls: 'coch', intra: 1, tip: 'VIII-cn', d: 'M368,468 C362,470 356,472 348,474' },
+    { f: 'SSA', cls: 'vest', intra: 1, tip: 'VIII-vn', d: 'M368,460 C350,454 330,448 316,446' },
+    { f: 'SSA', cls: 'coch', intra: 1, tip: 'trap', d: 'M350,468 C340,464 328,460 318,456' },
+    { f: 'SSA', cls: 'coch', intra: 1, tip: 'trapX', d: 'M348,472 C320,476 290,472 270,470 C250,468 236,462 224,456' },
     { f: 'SSA', cls: 'coch', intra: 1, tip: 'll', d: 'M318,450 C350,410 368,340 354,280 C346,240 334,216 324,206' },
     { f: 'SSA', cls: 'coch', intra: 1, tip: 'll', d: 'M222,450 C190,410 172,340 186,280 C194,240 206,216 216,206' },
     { f: 'SSA', cls: 'coch', intra: 1, deep: 1, tip: 'mgn', d: 'M322,186 C318,150 312,112 306,80' },
     { f: 'SSA', cls: 'coch', intra: 1, deep: 1, tip: 'mgn', d: 'M218,186 C222,150 228,112 234,80' },
-    { f: 'SSA', cls: 'vest', intra: 1, tip: 'vor', d: 'M338,442 C320,436 300,430 284,426 C274,423 268,421 262,418' },
+    { f: 'SSA', cls: 'vest', intra: 1, tip: 'vor', d: 'M302,458 C292,446 280,432 270,425 C266,422 264,420 262,418' },
     { f: 'GSE', intra: 1, tip: 'mlf', d: 'M262,418 C268,410 276,404 282,398 C284,340 284,260 280,186' },
-    { f: 'SSA', cls: 'vest', intra: 1, tip: 'vsp', d: 'M356,438 C350,500 338,600 326,700 C322,740 318,770 316,792' }
+    { f: 'SSA', cls: 'vest', intra: 1, tip: 'vsp', d: 'M314,448 C314,540 306,640 296,720 C294,750 294,775 294,792' }
   ],
   IX: [
     { f: 'SVE', intra: 1, tip: 'IX-intra', d: 'M304,494 C314,492 324,490 334,488' },
@@ -204,7 +204,7 @@ const ORBIT_CONTEXT = [
   { f: 'SYM', tip: 'symp-root', d: 'M852,350 C900,386 980,450 1040,462 C1100,458 1160,440 1198,420' }
 ];
 const FACE_CONTEXT = [
-  { f: 'SSA', tip: 'VIII', d: 'M380,470 C430,478 520,484 604,484' },
+  { f: 'SSA', tip: 'VIII', d: 'M368,464 C430,478 520,484 604,484' },
   { f: 'SYM', tip: 'deepPet', d: 'M846,444 C854,432 862,420 870,414' }
 ];
 
@@ -331,8 +331,10 @@ function brainstem() {
     <g class="nuc" data-tip="n-ISN" data-nerve="IX">${both('<circle cx="292" cy="474" r="4" fill="url(#nucGVE)"/>')}</g>
     <g class="nuc" data-tip="n-XII" data-nerve="XII">${both('<rect x="272" y="490" width="6" height="95" rx="3" fill="url(#nucGSE)"/>')}</g>
     <g class="nuc" data-tip="n-acc" data-nerve="XI">${both('<rect x="296" y="700" width="7" height="90" rx="3.5" fill="url(#nucSVE)"/>')}</g>
-    <g class="nuc" data-tip="n-vest" data-nerve="VIII">${both('<ellipse cx="344" cy="410" rx="6" ry="8" fill="url(#nucSSA)"/><ellipse cx="356" cy="427" rx="7" ry="8" fill="url(#nucSSA)"/><ellipse cx="338" cy="442" rx="7" ry="9" fill="url(#nucSSA)"/><ellipse cx="350" cy="462" rx="6" ry="10" fill="url(#nucSSA)"/>')}</g>
-    <g class="nuc" data-tip="n-coch" data-nerve="VIII">${both('<ellipse cx="374" cy="456" rx="6" ry="9" fill="url(#nucSSA)"/><ellipse cx="382" cy="474" rx="5" ry="8" fill="url(#nucSSA)"/>')}</g>
+    <!-- vestibular: medial to spinal V, caudal pons → rostral medulla · superior, lateral (Deiters), medial, inferior -->
+    <g class="nuc" data-tip="n-vest" data-nerve="VIII">${both('<ellipse cx="312" cy="410" rx="5" ry="9" fill="url(#nucSSA)"/><ellipse cx="314" cy="440" rx="5" ry="8" fill="url(#nucSSA)"/><ellipse cx="302" cy="468" rx="4" ry="20" fill="url(#nucSSA)"/><ellipse cx="313" cy="490" rx="4.5" ry="20" fill="url(#nucSSA)"/>')}</g>
+    <!-- cochlear: ventral + dorsal, on the lateral surface of the ICP where the root enters -->
+    <g class="nuc" data-tip="n-coch" data-nerve="VIII">${both('<ellipse cx="352" cy="466" rx="5" ry="8" fill="url(#nucSSA)"/><ellipse cx="342" cy="482" rx="5" ry="8" fill="url(#nucSSA)"/>')}</g>
     <g class="nuc" data-tip="n-soc" data-nerve="VIII">${both('<circle cx="318" cy="456" r="5" fill="url(#nucSSA)"/>')}</g>
     <g class="nuc" data-tip="n-ic" data-nerve="VIII">${both('<circle cx="322" cy="196" r="9" fill="url(#nucSSA)"/>')}</g>
     <g class="decx n-IV"><path d="M263,182 L277,194 M277,182 L263,194"/></g>
@@ -823,8 +825,8 @@ function earScene() {
   <g data-tip="spiralG" class="sg-g g-VIII"><circle class="tg" cx="1110" cy="570" r="13"/></g>`,
     medals: medal('VIII', 500, 356),
     labels: `
-    ${lbl(398, 404, 'VESTIBULAR N.', 'start', null, 'vestT')}
-    ${lbl(398, 494, 'COCHLEAR N.', 'start', null, 'cochT')}
+    ${lbl(398, 404, 'VESTIBULAR N.', 'start', [394, 402, 320, 418], 'vestT')}
+    ${lbl(398, 494, 'COCHLEAR N.', 'start', [394, 490, 356, 474], 'cochT')}
     ${lbl(318, 482, 'SOC', 'middle', null, 'faint')}
     ${lbl(270, 494, 'TRAPEZOID', 'middle', null, 'faint')}
     ${lbl(372, 330, 'LAT. LEMNISCUS', 'start', null, 'faint')}

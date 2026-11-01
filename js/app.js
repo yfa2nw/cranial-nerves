@@ -405,7 +405,7 @@ let hoveredNerve = null;
 function bind() {
   document.addEventListener('click', e => {
     const sel = e.target.closest('[data-select]');
-    if (sel) { select(sel.dataset.select); [Fibres, Olfaction, Sight, Hearing, Taste, Passages, Abbr, Help].forEach(m => m.close()); return; }
+    if (sel) { select(sel.dataset.select); [Fibres, Olfaction, Sight, Hearing, Taste, Passages, Abbr, Help, Exam, Reflexes, Localise, Quiz].forEach(m => m.close()); return; }
     const jump = e.target.closest('[data-jump]');
     if (jump) { $(jump.dataset.jump).closest('.card, section').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     if (e.target.closest('#fibreInfo')) { Fibres.open(NERVES[state.nerve].fibers[0]); return; }
@@ -415,6 +415,11 @@ function bind() {
     if (e.target.closest('#tasteInfo')) { Taste.open(); return; }
     if (e.target.closest('#abbrInfo')) { Abbr.open(); return; }
     if (e.target.closest('#helpInfo')) { Help.open(); return; }
+    if (e.target.closest('#examInfo')) { Exam.open(state.nerve); return; }
+    if (e.target.closest('#reflexInfo')) { Reflexes.open(); return; }
+    if (e.target.closest('#lesionInfo')) { Localise.open(); return; }
+    const quiz = e.target.closest('[data-quiz]');
+    if (quiz) { Quiz.open(quiz.dataset.quiz); return; }
     if (e.target.closest('#passInfo')) { Passages.open(); return; }
     const tool = e.target.closest('[data-tool]');
     if (tool) {
@@ -458,6 +463,7 @@ function bind() {
     if (e.target.closest('input, textarea')) return;           // typing in a search box, not navigating
     if (e.key === '/') { e.preventDefault(); Abbr.open(); return; }
     if (e.key === '?') { e.preventDefault(); Help.open(); return; }
+    if (document.body.classList.contains('modal-open')) return;  // arrows don't switch nerves behind a popup
     const ids = Object.keys(NERVES), i = ids.indexOf(state.nerve);
     if (e.key === 'ArrowRight') select(ids[(i + 1) % ids.length]);
     if (e.key === 'ArrowLeft') select(ids[(i + ids.length - 1) % ids.length]);
@@ -474,6 +480,18 @@ function init() {
   bind();
   const fromHash = location.hash.slice(1);
   select(NERVES[fromHash] ? fromHash : 'III');
+  welcomeOnce();
+}
+
+// first visit only: open the how-to popup, then remember that it was shown.
+// Storage can be blocked (private windows, strict settings) — then it simply shows each time.
+function welcomeOnce() {
+  const KEY = 'cranial-nerves:seen-help';
+  let seen = false;
+  try { seen = localStorage.getItem(KEY) === '1'; } catch (e) { /* storage unavailable */ }
+  if (seen) return;
+  Help.open();
+  try { localStorage.setItem(KEY, '1'); } catch (e) { /* storage unavailable */ }
 }
 
 init();
