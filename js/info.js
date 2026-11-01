@@ -18,6 +18,7 @@ const Info = {
   },
   show(id) {
     const el = document.getElementById(id);
+    void el.offsetWidth;          // a popup built this frame must be styled closed first, or its open transition is skipped
     el.classList.add('on');
     document.body.classList.add('modal-open');
     padHits(el);

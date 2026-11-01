@@ -144,7 +144,9 @@ const Fibres = (() => {
   function open(t) {
     if (!built) build();
     if (t && FIBERS[t] && t !== 'SYM') set(t); else paint();
-    document.getElementById('fibreModal').classList.add('on');
+    const el = document.getElementById('fibreModal');
+    void el.offsetWidth;          // style the freshly built popup closed first so the open transition runs
+    el.classList.add('on');
     document.body.classList.add('modal-open');
   }
   function close() {
