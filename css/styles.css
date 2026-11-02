@@ -774,10 +774,6 @@ main { padding: 0 40px 40px; }
 .dgroup { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; opacity: .65; transition: opacity .3s; }
 .dgroup.mine, .dgroup:hover { opacity: 1; }
 .dg-n { font: italic 600 14px var(--serif); color: var(--accent); width: 30px; }
-.xchips { grid-template-columns: repeat(3, 1fr); }
-.xchip { display: flex; align-items: center; gap: 8px; opacity: 1; }
-.xchip b { font-family: var(--sans); font-size: 14px; width: 16px; text-align: center; }
-.xchip .xl { font-size: 11.5px; color: var(--ink); }
 .nb-tag { font: italic 600 13px var(--serif); color: var(--accent); }
 .ctxb ellipse { fill: rgba(231, 195, 181, .12); stroke: rgba(231, 195, 181, .4); }
 .cm-ic path, .cm-ic ellipse { fill: rgba(154, 208, 255, .25); stroke: rgba(154, 208, 255, .6); }
@@ -971,7 +967,6 @@ main { padding: 0 40px 40px; }
 .bubble.no text { fill: #c22; } .bubble.part text { fill: #a86a00; } .bubble.ok text { fill: #127a4a; }
 .phantom { fill: none; stroke: #ff4d4d; stroke-width: 2; opacity: 0; }
 .phantom.on { animation: zap 1.4s steps(1) infinite; }
-.switches.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 
 /* ── vision region (II) ────────────────────────── */
 /* hemifield colours: hfL = left visual field, hfR = right visual field */
@@ -1110,8 +1105,6 @@ main { padding: 0 40px 40px; }
 .ctxr.c-VIII.tgt path { fill: color-mix(in srgb, var(--vest) 22%, transparent); stroke: color-mix(in srgb, var(--vest) 70%, transparent); }
 
 /* hearing & balance card */
-/* five results don’t fit in one row of the patient column: 3 + 2 */
-.findings.f5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .hfork { opacity: 0; transition: opacity .3s; }
 .hfork.on { opacity: 1; }
 .hfork path { fill: none; stroke: #d8dce6; stroke-width: 3.2; stroke-linecap: round; }
@@ -1155,39 +1148,31 @@ main { padding: 0 40px 40px; }
 @keyframes wave { 0% { opacity: 0; } 30% { opacity: .9; } 100% { opacity: 0; transform: translateX(var(--wx, 0)); } }
 .circuit .c-ear circle { fill: rgba(121, 224, 238, .1); stroke: rgba(121, 224, 238, .5); }
 
-/* findings strip (clinical cards) */
+/* examination panel (clinical cards): one tile per test, what you do + what you find */
 .patient { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.findings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.fd {
-  display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 7px; border-radius: 12px;
-  border: 1px solid var(--line); background: rgba(255, 255, 255, .02);
+.xt-groups { display: flex; flex-direction: column; gap: 8px; }
+.xt-grp { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 8px; align-items: start; opacity: .8; transition: opacity .3s; }
+.xt-grp.mine, .xt-grp:hover { opacity: 1; }
+.xt-n { font: italic 600 14px var(--serif); color: var(--accent); padding-top: 10px; line-height: 1.1; white-space: nowrap; }
+.xt-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.xt {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 8px; row-gap: 2px; align-items: center;
+  padding: 7px 10px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, .02);
+  cursor: help; transition: border-color .2s, background .2s;
 }
-.fd-h { display: flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
-.fd-h i { font-style: normal; color: var(--gold); }
-.lr { display: flex; gap: 5px; }
-.cell {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 5px; padding: 5px 7px; border-radius: 8px;
-  background: rgba(255, 255, 255, .04); border: 1px solid transparent; font-size: 11px; color: var(--faint); transition: all .3s;
-}
-.cell b { font-size: 9px; color: var(--mute); }
-.cell em { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cell.wide em { white-space: normal; line-height: 1.25; }      /* single-value cells wrap rather than cut a word */
-.cell.ok { background: rgba(95, 224, 160, .13); border-color: rgba(95, 224, 160, .4); color: #8ff3c2; }
-.cell.part { background: rgba(255, 181, 71, .13); border-color: rgba(255, 181, 71, .45); color: #ffd08a; }
-.cell.no { background: rgba(255, 77, 77, .14); border-color: rgba(255, 77, 77, .5); color: #ffa3a3; }
-.fd-note { font-size: 10px; color: var(--faint); min-height: 12px; }
-/* every result is shown; hovering a card (or one side cell) acts that test out on the patient */
-.fd[data-test] { cursor: help; transition: border-color .2s, background .2s; }
-.fd[data-test]:hover { border-color: rgba(242, 199, 110, .55); background: rgba(242, 199, 110, .05); }
-.fd .cell[data-test]:hover { outline: 1.5px solid rgba(242, 199, 110, .8); outline-offset: 1px; }
-.fd-hint { display: flex; align-items: center; gap: 8px; font: italic 500 13px var(--serif); color: var(--faint); margin-top: -2px; }
-.card-body .tmap { width: 44px; height: auto; align-self: center; }
-.cell:not(.wide) { justify-content: center; font-size: 13px; }
-.tz { fill: rgba(230, 140, 150, .16); stroke: rgba(255, 180, 190, .45); stroke-width: 1; transition: fill .3s; }
-.tz.ok { fill: rgba(95, 224, 160, .6); }
-.tz.no { fill: rgba(255, 77, 77, .6); }
-.tsulc { fill: none; stroke: rgba(255, 220, 220, .5); stroke-dasharray: 2 2; }
-.tzl { font: 600 8px var(--sans); fill: rgba(236, 232, 244, .7); text-anchor: middle; }
+.xt i { grid-row: span 2; font-style: normal; font-size: 15px; text-align: center; color: var(--gold); }
+.xt b { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.25; }
+.xr { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 1.3; color: var(--faint); }
+.xr em { font-style: normal; }
+.xf .fmap { width: 30px; height: 30px; display: block; }
+/* results always show; the tile's colour says normal / partial / abnormal */
+.xt[data-state="ok"] .xr { color: #8ff3c2; }
+.xt[data-state="part"] { border-color: rgba(255, 181, 71, .4); background: rgba(255, 181, 71, .05); }
+.xt[data-state="part"] .xr { color: #ffd08a; }
+.xt[data-state="no"] { border-color: rgba(255, 77, 77, .45); background: rgba(255, 77, 77, .06); }
+.xt[data-state="no"] .xr { color: #ffa3a3; }
+.xt:hover { border-color: rgba(242, 199, 110, .7); background: rgba(242, 199, 110, .07); }
+@media (max-width: 760px) { .xt-list { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── fibre-type explainer popup ────────────────── */
 .fx-back {
@@ -2061,7 +2046,6 @@ body.modal-open { overflow: hidden; }
 body[data-nerve="III"] { --accent: var(--gse); }
 
 @media (max-width: 1180px) {
-  .findings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .eyes-wrap { grid-template-columns: 1fr; grid-template-areas: "view" "ctrl" "explain"; }
 }
 @media (max-width: 900px) {

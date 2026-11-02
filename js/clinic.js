@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-//  Shared pieces of the clinical cards (Movements, Face):
-//  circuit segments, chain lighting, lesion markers, the
+//  Shared pieces of the clinical cards:
+//  circuit segments, chain lighting, lesion markers, the examination panel, the
 //  What & why panel and the "try this" pulses.
 // ─────────────────────────────────────────────────────────────
 
@@ -59,32 +59,39 @@ const Clinic = {
   sw: (key, attr, on, icon, label, tip) =>
     `<button class="switch ck ${on ? 'on' : ''}" data-${attr}="${key}" data-tip="${tip}"><span class="sw-ic">${icon}</span>${label}<span class="track"><span class="knob"></span></span></button>`,
 
-  // ── findings strip: every result is shown; hovering a card (or one side of it) performs that test
-  // items: [{ k, label, icon, kind: 'lr' | 'tongue' | 'field' | 'val', test?, sides?: { R, L }, tip? }]
-  //   test  = test key acted out when the card is hovered · sides = per-side test keys for 'lr' cards
-  findings(items) {
-    const dt = (k) => k ? ` data-test="${k}"` : '';
-    const body = (it) =>
-      it.kind === 'lr' ? `<div class="lr"><span class="cell" data-side="R"${dt(it.sides?.R)}><b>R</b><em>—</em></span><span class="cell" data-side="L"${dt(it.sides?.L)}><b>L</b><em>—</em></span></div>`
-      : it.kind === 'tongue' ? Clinic.tongueMap()
-      : it.kind === 'field' ? `<div class="fieldbox untested">${Clinic.fieldSVG('none')}</div>`
-      : `<div class="lr"><span class="cell wide"><em>—</em></span></div>`;
-    const cls = items.length === 5 ? 'findings f5' : 'findings';
-    return `<div class="${cls}">${items.map(it =>
-      `<div class="fd" id="fd-${it.k}"${dt(it.test || it.sides?.R)}${it.tip ? ` data-tip="${it.tip}"` : ''}><div class="fd-h"><i>${it.icon}</i>${it.label}</div>${body(it)}<small class="fd-note"></small></div>`).join('')}</div>
-      <p class="fd-hint">${Clinic.act('hover')}a result to watch that test on the patient and in the circuit</p>`;
+  // ── examination panel: one tile per test, naming what you do and showing what you find.
+  // Every result is always shown; hovering a tile acts that test out on the patient.
+  // groups: [{ n: group label, mine?: bool, tests: [{ k, label, icon, tip?, field? }] }]
+  //   k = test key (used for data-test, result id and "try this" pulses) · field = tile shows a mini visual field
+  exam(groups, num = 2) {
+    const tile = (t) => `<div class="xt" data-test="${t.k}"${t.tip ? ` data-tip="${t.tip}"` : ''}>
+      <i>${t.icon}</i><b>${t.label}</b><span class="xr" id="xr-${t.k}">${t.field ? `<span class="xf">${Clinic.fieldSVG('none')}</span>` : ''}<em>—</em></span></div>`;
+    return `<section class="step step-exam">
+      <div class="step-h"><span class="sn">${num}</span><b>Examine</b>${Clinic.act('hover')}<small>every result shown · hover a test to watch it on the patient</small></div>
+      <div class="xt-groups">${groups.map(g => `<div class="xt-grp ${g.mine ? 'mine' : ''}">
+        <span class="xt-n">${g.n}</span><div class="xt-list">${g.tests.map(tile).join('')}</div></div>`).join('')}</div>
+    </section>`;
   },
 
-  // hovering a findings card (or one of its side cells) calls cb(testKey); leaving the strip calls cb(null)
+  // write one test's result · state: 'ok' ✓ · 'part' ◐ · 'no' ✗ · field = defect key for a field tile
+  result(k, state, text, field) {
+    const r = document.getElementById(`xr-${k}`);
+    if (!r) return;
+    r.closest('.xt').dataset.state = state || '';
+    r.querySelector('em').textContent = `${{ ok: '✓', part: '◐', no: '✗' }[state] || ''} ${text}`.trim();
+    if (field !== undefined) r.querySelector('.xf').innerHTML = Clinic.fieldSVG(field);
+  },
+
+  // hovering a test tile calls cb(testKey); leaving the panel calls cb(null)
   probe(root, cb) {
-    const strip = root.querySelector('.findings');
-    if (!strip) return;
+    const panel = root.querySelector('.xt-groups');
+    if (!panel) return;
     let cur = null;
-    strip.addEventListener('mouseover', e => {
+    panel.addEventListener('mouseover', e => {
       const k = e.target.closest('[data-test]')?.dataset.test || null;
       if (k !== cur) { cur = k; cb(k); }
     });
-    strip.addEventListener('mouseleave', () => { if (cur) { cur = null; cb(null); } });
+    panel.addEventListener('mouseleave', () => { if (cur) { cur = null; cb(null); } });
   },
 
   // visual field circle (unit radius), drawn as the patient sees it: left half = left field
@@ -96,50 +103,16 @@ const Clinic = {
     leftSpare: 'M0,-1 A1,1 0 0,0 0,1 Z', central: 'M-.36,0 A.36,.36 0 1,0 .36,0 A.36,.36 0 1,0 -.36,0 Z',
     blindL: 'M-.78,0 A.3,.24 0 1,0 -.18,0 A.3,.24 0 1,0 -.78,0 Z', blindR: 'M.18,0 A.3,.24 0 1,0 .78,0 A.3,.24 0 1,0 .18,0 Z'
   },
+  // the same defects in words
+  FIELD_WORDS: {
+    none: 'full field', all: 'blind', leftHalf: 'left half lost', rightHalf: 'right half lost', lowerHalf: 'lower half lost',
+    ulq: 'upper-left quarter lost', llq: 'lower-left quarter lost', urq: 'upper-right quarter lost', lrq: 'lower-right quarter lost',
+    leftSpare: 'left half lost, centre spared', central: 'central scotoma', blindL: 'enlarged blind spot', blindR: 'enlarged blind spot'
+  },
   fieldSVG(def = 'none', attrs = '') {
     return `<svg viewBox="-1.2 -1.2 2.4 2.4" class="fmap" ${attrs}><circle r="1" class="fm-bg"/>
       <path class="fm-def" d="${Clinic.FIELD[def] || ''}"/>${def === 'leftSpare' ? '<circle r=".3" class="fm-bg"/>' : ''}
       <path class="fm-axis" d="M-1,0 H1 M0,-1 V1"/><circle r="1" class="fm-ring"/></svg>`;
-  },
-  setField(k, def, tested) {
-    const box = document.querySelector(`#fd-${k} .fieldbox`);
-    if (!box) return;
-    box.innerHTML = Clinic.fieldSVG(def);
-    box.classList.toggle('untested', !tested);
-  },
-
-  // tongue seen from the front, tip up · patient's right on the viewer's left
-  tongueMap() {
-    return `<svg viewBox="0 0 64 76" class="tmap">
-      <path class="tz" data-z="aR" d="M32,4 C18,4 8,16 8,32 L8,50 L32,50 Z"/>
-      <path class="tz" data-z="aL" d="M32,4 C46,4 56,16 56,32 L56,50 L32,50 Z"/>
-      <path class="tz" data-z="pR" d="M8,50 C8,62 18,72 32,72 L32,50 Z"/>
-      <path class="tz" data-z="pL" d="M56,50 C56,62 46,72 32,72 L32,50 Z"/>
-      <path class="tsulc" d="M10,46 L32,56 L54,46"/>
-      <text x="32" y="30" class="tzl">VII</text><text x="32" y="67" class="tzl">IX</text>
-    </svg>`;
-  },
-
-  // state: 'ok' ✓ · 'part' ◐ · 'no' ✗ · '' not tested
-  setCell(k, side, state, text) {
-    const cell = document.querySelector(`#fd-${k} .cell${side ? `[data-side="${side}"]` : ''}`);
-    if (!cell) return;
-    // side cells are narrow: symbol only (meaning goes in the note); the wide cell shows text too
-    const sym = { ok: '✓', part: '◐', no: '✗' }[state];
-    cell.className = `cell ${side ? '' : 'wide'} ${state}`;
-    cell.title = text || '';
-    cell.querySelector('em').textContent = state ? (side ? sym : `${sym} ${text}`) : '—';
-  },
-  // "R absent · L present" from per-side [state, text] pairs
-  sides(r, l) {
-    return [['R', r], ['L', l]].filter(([, v]) => v[0]).map(([s, v]) => `${s} ${v[1]}`).join(' · ');
-  },
-  setZones(k, zones) {
-    document.querySelectorAll(`#fd-${k} .tz`).forEach(z => { z.setAttribute('class', `tz ${zones[z.dataset.z] || ''}`); });
-  },
-  setNote(k, text) {
-    const n = document.querySelector(`#fd-${k} .fd-note`);
-    if (n) n.textContent = text;
   },
 
   explainShell: (n = 3) =>

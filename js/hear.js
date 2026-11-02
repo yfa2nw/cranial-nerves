@@ -117,12 +117,7 @@ const Hear = (() => {
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
-        <div class="patient">${patientSVG()}${Clinic.findings([
-          { k: 'web', label: 'Weber', icon: '⋔', kind: 'val', test: 'weber', tip: 'ht-weber' },
-          { k: 'rin', label: 'Rinne', icon: '◖', kind: 'lr', sides: { R: 'rinneR', L: 'rinneL' }, tip: 'ht-rinneR' },
-          { k: 'hit', label: 'Impulse', icon: '↶', kind: 'lr', sides: { R: 'hitR', L: 'hitL' }, tip: 'ht-hitR' },
-          { k: 'nys', label: 'Gaze', icon: '◉', kind: 'val', test: 'gaze', tip: 'ht-gaze' },
-          { k: 'hal', label: 'Hallpike', icon: '⤵', kind: 'lr', sides: { R: 'hallR', L: 'hallL' }, tip: 'ht-hallR' }])}</div>
+        <div class="patient">${patientSVG()}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -130,8 +125,20 @@ const Hear = (() => {
           <div class="step-h"><span class="sn">1</span><b>Pick a lesion</b>${act('click')}<small>one at a time · click again to clear</small></div>
           <div class="dchips">${chips}</div>
         </section>
+        ${Clinic.exam([
+          { n: 'Fork', mine: true, tests: [
+            { k: 'weber', label: 'Weber · fork on the forehead', icon: '⋔', tip: 'ht-weber' },
+            { k: 'rinneR', label: 'Rinne · right ear', icon: '◖', tip: 'ht-rinneR' },
+            { k: 'rinneL', label: 'Rinne · left ear', icon: '◗', tip: 'ht-rinneL' }] },
+          { n: 'Head', mine: true, tests: [
+            { k: 'hitR', label: 'Head impulse · to the right', icon: '↶', tip: 'ht-hitR' },
+            { k: 'hitL', label: 'Head impulse · to the left', icon: '↷', tip: 'ht-hitL' }] },
+          { n: 'Eyes', mine: true, tests: [
+            { k: 'gaze', label: 'Look straight ahead', icon: '◉', tip: 'ht-gaze' },
+            { k: 'hallR', label: 'Dix–Hallpike · right', icon: '⤵', tip: 'ht-hallR' },
+            { k: 'hallL', label: 'Dix–Hallpike · left', icon: '⤵', tip: 'ht-hallL' }] }])}
       </div>
-      ${Clinic.explainShell(2)}
+      ${Clinic.explainShell()}
     </div>`;
   }
 
@@ -139,9 +146,9 @@ const Hear = (() => {
   const cls = (id, c, on) => $id(id)?.classList.toggle(c, !!on);
   const pick = (grp) => GROUPS[grp].includes(probe) ? probe : null;
 
-  const RIN = { ok: 'AC > BC', part: 'AC > BC, quiet', no: 'BC > AC' };
-  const HIT = { ok: 'eyes stay on target', part: 'small catch-up', no: 'catch-up saccade' };
-  const NYS = { none: ['ok', 'none'], beatsL: ['no', 'beats L'], alt: ['no', 'flips'], attacks: ['part', 'attacks'] };
+  const RIN = { ok: 'air louder than bone', part: 'air > bone, but quiet', no: 'bone louder than air' };
+  const HIT = { ok: 'eyes stay on target', part: 'small catch-up saccade', no: 'catch-up saccade' };
+  const NYS = { none: ['ok', 'no nystagmus'], beatsL: ['no', 'nystagmus beating left'], alt: ['no', 'changes direction with gaze'], attacks: ['part', 'none between attacks'] };
   const WEB = { mid: 'middle', R: 'right', L: 'left' };
 
   function apply() {
@@ -179,29 +186,19 @@ const Hear = (() => {
     cls('hpose', 'on', !!hallSide);
     $id('hposeT').textContent = hallSide ? `head 45° ${hallSide === 'R' ? 'right' : 'left'} · lying back` : '';
 
-    // findings strip: every result, always
-    Clinic.setCell('web', null, l.weber === 'mid' ? 'ok' : 'part', WEB[l.weber]);
-    Clinic.setNote('web', l.weber === 'mid' ? 'symmetrical' : `louder ${WEB[l.weber]}: conductive there, or nerve loss on the other side`);
-    const rin = (s) => [l.rinne[s], RIN[l.rinne[s]]];
-    const rR = rin('R'), rL = rin('L');
-    Clinic.setCell('rin', 'R', rR[0], rR[1]); Clinic.setCell('rin', 'L', rL[0], rL[1]);
-    Clinic.setNote('rin', Clinic.sides(rR, rL));
-    const hi = (s) => [l.hit[s], HIT[l.hit[s]]];
-    const hR = hi('R'), hL = hi('L');
-    Clinic.setCell('hit', 'R', hR[0], hR[1]); Clinic.setCell('hit', 'L', hL[0], hL[1]);
-    Clinic.setNote('hit', Clinic.sides(hR, hL));
-    const ny = NYS[l.nys];
-    Clinic.setCell('nys', null, ny[0], ny[1]);
-    Clinic.setNote('nys', l.nys === 'beatsL' ? 'fast phase away from the bad ear' : l.nys === 'alt' ? 'changes direction with gaze' : l.nys === 'attacks' ? 'none between attacks' : 'eyes steady');
-    const ha = (s) => [l.hall[s], l.hall[s] === 'no' ? 'positive' : 'negative'];
-    const aR = ha('R'), aL = ha('L');
-    Clinic.setCell('hal', 'R', aR[0], aR[1]); Clinic.setCell('hal', 'L', aL[0], aL[1]);
-    Clinic.setNote('hal', Clinic.sides(aR, aL));
+    // results: every test, always
+    Clinic.result('weber', l.weber === 'mid' ? 'ok' : 'part', l.weber === 'mid' ? 'heard in the middle' : `louder in the ${WEB[l.weber]} ear`);
+    ['R', 'L'].forEach(sd => {
+      Clinic.result(`rinne${sd}`, l.rinne[sd], RIN[l.rinne[sd]]);
+      Clinic.result(`hit${sd}`, l.hit[sd], HIT[l.hit[sd]]);
+      Clinic.result(`hall${sd}`, l.hall[sd], l.hall[sd] === 'no' ? 'positive — torsional nystagmus' : 'negative');
+    });
+    Clinic.result('gaze', ...NYS[l.nys]);
     paintCircuit();
   }
 
   function paintCircuit() {
-    // at rest every test is drawn; while a card is hovered, only its own pathway
+    // at rest every test is drawn; while a test is hovered, only its own pathway
     const chains = probe ? CHAINS[probe] : Object.values(CHAINS).flat();
     Clinic.paint($id('hcircuit'), chains, (HC_LES[mode] || NONE).blk);
   }

@@ -4,9 +4,8 @@
 // ─────────────────────────────────────────────────────────────
 
 const Throat = (() => {
-  // held = the movement being hovered · probe = the test acted out while its findings card is hovered
+  // held = the movement being hovered · probe = the test being hovered (both are tiles in the Examine panel)
   let mode = null, held = null, probe = null;
-  const TESTS = ['gagR', 'gagL', 'carotid', 'voice', 'taste9'];
   const EXPR = [['aah', 'Say "aah"', '◠'], ['tongue', 'Tongue out', '▼'], ['shrug', 'Shrug', '⇑'],
                 ['turnL', 'Turn head left', '↷'], ['turnR', 'Turn head right', '↶']];
 
@@ -119,15 +118,11 @@ const Throat = (() => {
       const multi = n.includes('·'), mine = multi ? ['IX', 'X', 'XII'].includes(id) : n === id;
       return `<div class="dgroup ${mine ? 'mine' : ''}"><span class="dg-n" ${multi ? `title="${n} · both sides"` : ''}>${multi ? 'both' : n}</span>${items.map(chip).join('')}</div>`;
     }).join('');
-    const ex = EXPR.map(([k, l, g]) => `<div class="mchip hv xchip" data-ex="${k}" data-tip="tx-${k}"><b>${g}</b><span class="xl">${l}</span></div>`).join('');
+    const ex = Object.fromEntries(EXPR.map(([k, l, g]) => [k, { k, label: l, icon: g, tip: `tx-${k}` }]));
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
-        <div class="patient">${throatSVG()}${Clinic.findings([
-          { k: 'gag', label: 'Gag reflex', icon: '✧', kind: 'lr', sides: { R: 'gagR', L: 'gagL' }, tip: 'tt-gagR' },
-          { k: 'taste', label: 'Taste', icon: '◇', kind: 'tongue', test: 'taste9', tip: 'tt-taste9' },
-          { k: 'hr', label: 'Heart rate', icon: '♥', kind: 'val', test: 'carotid', tip: 'tt-carotid' },
-          { k: 'voice', label: 'Voice', icon: '♪', kind: 'val', test: 'voice', tip: 'tt-voice' }])}</div>
+        <div class="patient">${throatSVG()}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -135,10 +130,16 @@ const Throat = (() => {
           <div class="step-h"><span class="sn">1</span><b>Pick a lesion</b>${act('click')}<small>one at a time · click again to clear · right side unless named</small></div>
           <div class="dgroups">${groups}</div>
         </section>
-        <section class="step">
-          <div class="step-h"><span class="sn">2</span><b>Ask the patient to…</b>${act('hover')}<small>watch the patient and the circuit respond</small></div>
-          <div class="mchips xchips">${ex}</div>
-        </section>
+        ${Clinic.exam([
+          { n: 'IX · X', mine: id === 'IX' || id === 'X', tests: [
+            ex.aah,
+            { k: 'voice', label: 'Voice · say “eee”', icon: '♪', tip: 'tt-voice' },
+            { k: 'gagR', label: 'Gag · touch right side', icon: '✧', tip: 'tt-gagR' },
+            { k: 'gagL', label: 'Gag · touch left side', icon: '✧', tip: 'tt-gagL' },
+            { k: 'carotid', label: 'Carotid massage · right', icon: '♥', tip: 'tt-carotid' },
+            { k: 'taste9', label: 'Taste · back ⅓, right', icon: '◇', tip: 'tt-taste9' }] },
+          { n: 'XI', mine: id === 'XI', tests: [ex.shrug, ex.turnL, ex.turnR] },
+          { n: 'XII', mine: id === 'XII', tests: [ex.tongue] }])}
       </div>
       ${Clinic.explainShell()}
     </div>`;
@@ -205,30 +206,32 @@ const Throat = (() => {
     for (let i = 0; i < 10; i++) w += s.hoarse ? ` l6,${(i % 2 ? 1 : -1) * (4 + (i * 7) % 9)}` : ` q3,${i % 2 ? 8 : -8} 6,0`;
     $id('tWave').setAttribute('d', w);
 
-    // … and every result in the findings strip
+    // … and every result, always
+    const R = Clinic.result;
+    R('aah', ...(s.bulbar ? ['no', 'palate doesn’t rise'] : s.pseudo ? ['part', 'palate barely rises'] : s.xR ? ['no', 'uvula swings to the left'] : ['ok', 'palate rises evenly']));
+    R('voice', ...(s.hoarse ? ['no', s.voiceText] : ['ok', 'clear']));
     const gag = (side) => {
-      if (side === 'R' && s.ixR) return ['no', 'absent'];
-      if (s.bulbar) return ['no', 'absent · no motor limb'];
-      if (s.pseudo) return ['part', 'brisk · exaggerated'];
-      return s.xR ? ['part', 'left palate only'] : ['ok', 'present'];
+      if (side === 'R' && s.ixR) return ['no', 'absent — no sensation'];
+      if (s.bulbar) return ['no', 'absent — no motor limb'];
+      if (s.pseudo) return ['part', 'brisk, exaggerated'];
+      return s.xR ? ['part', 'only the left palate rises'] : ['ok', 'both sides rise'];
     };
-    const gR = gag('R'), gL = gag('L');
-    Clinic.setCell('gag', 'R', ...gR);
-    Clinic.setCell('gag', 'L', ...gL);
-    Clinic.setNote('gag', Clinic.sides(gR, gL));
-    Clinic.setZones('taste', { pR: s.ixR ? 'no' : 'ok' });
-    Clinic.setNote('taste', s.ixR ? 'back ⅓ right: lost' : 'back ⅓ right: tastes');
+    R('gagR', ...gag('R'));
+    R('gagL', ...gag('L'));
     const slows = !s.ixR && !s.xR;
-    Clinic.setCell('hr', null, slows ? 'ok' : 'no', slows ? '72 → 56' : '72 → 72');
-    Clinic.setNote('hr', `right carotid massage · ${slows ? 'reflex intact' : 'reflex lost'}`);
-    Clinic.setCell('voice', null, s.hoarse ? 'no' : 'ok', s.hoarse ? s.voiceText : 'clear');
-    Clinic.setNote('voice', s.hoarse ? 'vocal folds don’t meet' : 'say “eee”');
+    R('carotid', ...(slows ? ['ok', 'heart slows 72 → 56'] : ['no', 'no change, 72 → 72']));
+    R('taste9', ...(s.ixR ? ['no', 'no taste on the right'] : ['ok', 'tastes bitter']));
+    R('shrug', ...(s.trapR ? ['no', 'right shoulder weak'] : ['ok', 'equal, strong']));
+    R('turnL', ...(s.scmR ? ['no', 'weak (right sternocleidomastoid)'] : ['ok', 'strong']));
+    R('turnR', 'ok', 'strong');
+    R('tongue', ...(s.wastingBoth ? ['no', 'wasted, fasciculating, barely protrudes'] : s.tongueShort ? ['part', 'stiff, slow, barely protrudes']
+      : s.wasting ? ['no', 'deviates right, wasted'] : s.tongueDev ? ['no', 'deviates right, no wasting'] : ['ok', 'midline']));
     paintCircuit();
   }
 
   function paintCircuit() {
-    // a hovered movement or test shows its own pathway; at rest, every test's pathway is drawn
-    const chains = held ? CHAINS[held] : probe ? CHAINS[probe] : TESTS.flatMap(k => CHAINS[k]);
+    // a hovered movement or test shows its own pathway; at rest, every pathway is drawn
+    const chains = held ? CHAINS[held] : probe ? CHAINS[probe] : Object.values(CHAINS).flat();
     Clinic.paint($id('tcircuit'), chains, (TC_LES[mode] || NONE).blk);
   }
 
@@ -236,15 +239,13 @@ const Throat = (() => {
     Clinic.marks($id('tcmarks'), (TC_LES[mode] || NONE).marks);
     const d = THROAT_LESIONS[mode];
     Clinic.explain($id('explain'), d, 'Pick a lesion in step 1 — this panel then explains what happens and why.', d ? d.n : '');
-    Clinic.suggest($id('card-eyes'), ['ex', 'test'], d ? d.try.keys : []);
+    Clinic.suggest($id('card-eyes'), ['test'], d ? d.try.keys : []);
   }
 
   function bind(root) {
-    root.querySelectorAll('[data-ex]').forEach(b => {
-      b.addEventListener('mouseenter', () => { held = b.dataset.ex; apply(); });
-      b.addEventListener('mouseleave', () => { held = null; apply(); });
-    });
-    Clinic.probe(root, k => { probe = k; apply(); });
+    // one panel holds movements (held) and tests (probe)
+    const isMove = (k) => EXPR.some(([x]) => x === k);
+    Clinic.probe(root, k => { held = isMove(k) ? k : null; probe = isMove(k) ? null : k; apply(); });
     root.querySelectorAll('[data-tl]').forEach(b => b.addEventListener('click', () => {
       mode = mode === b.dataset.tl ? null : b.dataset.tl;
       root.querySelectorAll('[data-tl]').forEach(c => c.classList.toggle('on', c.dataset.tl === mode));

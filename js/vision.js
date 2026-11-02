@@ -89,11 +89,7 @@ const Vision = (() => {
     return `
     <div class="eyes-wrap">
       <div class="eyes-top">
-        <div class="patient">${patientSVG()}${Clinic.findings([
-          { k: 'fRE', label: 'Right eye field', icon: '◐', kind: 'field', test: 'fieldR', tip: 'vt-fieldR' },
-          { k: 'fLE', label: 'Left eye field', icon: '◑', kind: 'field', test: 'fieldL', tip: 'vt-fieldL' },
-          { k: 'pup', label: 'Light in each eye', icon: '☀', kind: 'lr', sides: { R: 'lightR', L: 'lightL' }, tip: 'vt-lightL' },
-          { k: 'rapd', label: 'Swinging light', icon: '⇄', kind: 'val', test: 'swing', tip: 'vt-swing' }])}</div>
+        <div class="patient">${patientSVG()}</div>
         ${circuit()}
       </div>
       <div class="eye-ctrl">
@@ -101,8 +97,16 @@ const Vision = (() => {
           <div class="step-h"><span class="sn">1</span><b>Pick a lesion</b>${act('click')}<small>one at a time · click again to clear</small></div>
           <div class="dchips">${chips}</div>
         </section>
+        ${Clinic.exam([
+          { n: 'Fields', mine: true, tests: [
+            { k: 'fieldR', label: 'Confrontation · right eye', icon: '◐', tip: 'vt-fieldR', field: true },
+            { k: 'fieldL', label: 'Confrontation · left eye', icon: '◑', tip: 'vt-fieldL', field: true }] },
+          { n: 'Pupils', mine: true, tests: [
+            { k: 'lightR', label: 'Light · right eye', icon: '☀', tip: 'vt-lightR' },
+            { k: 'lightL', label: 'Light · left eye', icon: '☀', tip: 'vt-lightL' },
+            { k: 'swing', label: 'Swinging light', icon: '⇄', tip: 'vt-swing' }] }])}
       </div>
-      ${Clinic.explainShell(2)}
+      ${Clinic.explainShell()}
     </div>`;
   }
 
@@ -126,21 +130,18 @@ const Vision = (() => {
     if (light === 'swing') r = rapdR ? 12.5 : 5;
     ['vpR', 'vpL'].forEach(id => $id(id).style.r = `${r}px`);
 
-    // findings: every result, always (fields drawn as the patient sees them)
-    Clinic.setField('fRE', l.RE, true);
-    Clinic.setNote('fRE', l.RE === 'none' ? 'full field' : 'defect');
-    Clinic.setField('fLE', l.LE, true);
-    Clinic.setNote('fLE', l.LE === 'none' ? 'full field' : 'defect');
-    const pR = rapdR ? ['part', 'weak'] : ['ok', 'brisk'], pL = ['ok', 'brisk'];
-    Clinic.setCell('pup', 'R', ...pR); Clinic.setCell('pup', 'L', ...pL);
-    Clinic.setNote('pup', rapdR ? 'both pupils react less to the right eye' : 'both pupils, direct + consensual');
-    Clinic.setCell('rapd', null, rapdR ? 'no' : 'ok', rapdR ? 'RAPD' : 'none');
-    Clinic.setNote('rapd', rapdR ? 'both dilate on reaching the right eye' : 'both stay small on each swing');
+    // results: every test, always (fields drawn as the patient sees them)
+    const fState = (def) => def === 'none' ? 'ok' : def.startsWith('blind') ? 'part' : 'no';
+    Clinic.result('fieldR', fState(l.RE), Clinic.FIELD_WORDS[l.RE], l.RE);
+    Clinic.result('fieldL', fState(l.LE), Clinic.FIELD_WORDS[l.LE], l.LE);
+    Clinic.result('lightR', rapdR ? 'part' : 'ok', rapdR ? 'both pupils react weakly' : 'both pupils constrict');
+    Clinic.result('lightL', 'ok', 'both pupils constrict');
+    Clinic.result('swing', rapdR ? 'no' : 'ok', rapdR ? 'RAPD — both dilate at the right eye' : 'no RAPD — pupils stay small');
     paintCircuit();
   }
 
   function paintCircuit() {
-    // at rest every test is drawn; while a card is hovered, only its own pathway
+    // at rest every test is drawn; while a test is hovered, only its own pathway
     const chains = probe ? CHAINS[probe] : Object.values(CHAINS).flat();
     Clinic.paint($id('vcircuit'), chains, (VC_LES[mode] || NONE).blk);
   }
